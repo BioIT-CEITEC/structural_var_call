@@ -1,0 +1,90 @@
+{
+  "workflow_description": {
+    "name":"somatic_small_var_call",
+    "version": 1.0,
+    "label":"Somatic small variant calling testBETA2",
+    "type":"somatic_small_var_call",
+    "inputs":[
+      "mapped/{sample}.bam*"
+    ],
+    "outputs":[
+      "final_variant_table.xlsx",
+      "final_variant_table.tsv",
+      "mutation_loads.xlsx",
+      "config.json",
+      "*.reports.zip",
+      "annotate/*",
+      "logs/*",
+      "per_sample_final_var_tabs/*",
+      "somatic_seq_results/*",
+      "taskrunner/*",
+      "variant_calls/*"
+    ],
+    "report_index": "annotate/all_variants.annotated.tsv_summary.html",
+    "reports":[
+      "annotate/all_variants.annotated.tsv_summary.html"
+    ]
+  },
+  "general_params": [
+    "entity_name",
+    "sample_name"
+  ],
+  "requested_params": [
+    "is_paired",
+    "reference",
+    "lib_ROI"
+  ],
+  "gui_params" : {
+    "primary": {
+      "callers": {
+        "label": "Somatic variant callers to use",
+        "type": "string",
+        "default": "strelka;vardict;mutect2;somaticsniper;lofreq;muse;varscan"
+      },
+      "format": {
+        "label": "Result variant table format ",
+        "type": "enum",
+        "default": "default",
+        "list": {
+          "default": "Default format",
+          "BRONCO": "BRONCO",
+          "slaby_children_soma" : "Pediatric oncology project format somatic"
+        }
+      }
+    },
+    "detailed": {
+      "min_variant_frequency": {
+        "label": "Vardict & Final Processing: Minimal variant frequency to report",
+        "type": "int",
+        "default": 0
+      },
+      "varscan_extra_params": {
+        "label": "Varscan: Extra parameters",
+        "type": "string",
+        "default": "--strand-filter 0 --p-value 0.95 --min-var-freq 0.05"
+      },
+      "not_use_merged": {
+        "label": "VEP: not_use_merged",
+        "type": "bool",
+        "default": false
+      }
+    },
+    "samples": {
+      "donor": {
+        "label": "Patient ID",
+        "type": "string",
+        "default": ""
+      },
+      "tumor_normal": {
+        "label": "Tumor/normal",
+        "type": "enum",
+        "default": "normal",
+        "list": {
+          "tumor": "tumor",
+          "normal": "normal"
+        }
+      }
+    }
+  }
+}
+
