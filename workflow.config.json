@@ -1,5 +1,7 @@
 {
   "workflow_description": {
+    "name":"structural_var_call",
+    "version": 1.0,
     "label":"Structural variant calling",
     "type":"var_call",
     "inputs":[
