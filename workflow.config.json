@@ -2,7 +2,7 @@
   "workflow_description": {
     "name":"structural_var_call",
     "version": 1.0,
-    "label":"Structural variant calling new",
+    "label":"Structural variant calling 2",
     "type":"var_call",
     "inputs":[
       "mapped/{sample}.bam*"
@@ -28,7 +28,7 @@
   "gui_params" : {
     "primary": {
       "tumor_normal_paired": {
-        "label": "tumor/normal paired samples",
+        "label": "tumor normal paired samples",
         "type": "bool",
         "default": false
       }
@@ -47,7 +47,7 @@
         "default": ""
       },
       "tumor_normal": {
-        "label": "Tumor/normal",
+        "label": "Tumor normal",
         "type": "enum",
         "default": "normal",
         "list": {
