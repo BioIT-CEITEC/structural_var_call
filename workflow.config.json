@@ -2,7 +2,7 @@
   "workflow_description": {
     "name":"structural_var_call",
     "version": 1.0,
-    "label":"Structural variant calling",
+    "label":"Structural variant calling new",
     "type":"var_call",
     "inputs":[
       "mapped/{sample}.bam*"
