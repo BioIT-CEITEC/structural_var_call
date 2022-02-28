@@ -8,7 +8,9 @@
       "mapped/{sample}.bam*"
     ],
     "outputs":[
-      "cnv_sv/*"
+      "variant_calls/*",
+      "final_CNV_calls/*",
+      "cnv_sv/final_report.html"
     ],
     "report_index": "cnv_sv/final_report.html",
     "reports":[
@@ -20,16 +22,15 @@
     "sample_name"
   ],
   "requested_params": [
-    "is_paired",
     "reference",
     "lib_ROI"
   ],
   "gui_params" : {
     "primary": {
-      "callers": {
-        "label": "Fake param",
-        "type": "string",
-        "default": "fake"
+      "tumor_normal_paired": {
+        "label": "tumor/normal paired samples",
+        "type": "bool",
+        "default": false
       }
     },
     "detailed": {

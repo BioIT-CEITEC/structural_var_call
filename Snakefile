@@ -40,6 +40,9 @@ reference_directory = os.path.join(GLOBAL_REF_PATH,config["organism"],config["re
 # if not "not_use_merged" in config:
 #     config["not_use_merged"] = False
 
+wildcard_constraints:
+     tumor_normal = "tumor|normal",
+
 
 ####################################
 # SEPARATE RULES
@@ -48,17 +51,13 @@ include: "rules/gatk_cnv.smk"
 include: "rules/manta.smk"
 include: "rules/pindel.smk"
 include: "rules/svdb.smk"
-include: "rules/SV_postprocessing"
+include: "rules/SV_postprocessing.smk"
 # include: "rules/vep.smk"
+
+
 
 ####################################
 # RULE ALL
 rule all:
-    input:  
-        vcf_cnvkit=lambda wildcards: expand("cnv_sv/cnvkit_vcf/{sample_name}.vcf", sample_name = sample_tab.sample_name),
-        segment_regions=lambda wildcards: expand("cnv_sv/cnvkit_batch/{donor}/{sample_name}.cnr",sample_name = sample_tab.sample_name,donor=sample_tab.donor),
-        vcf_gatk=lambda wildcards: expand("cnv_sv/gatk_cnv_vcf/{sample_name}.vcf", sample_name = sample_tab.sample_name),
-        manta_som_sv_vcf=lambda wildcards: expand("cnv_sv/manta/{donor}/results/variants/somaticSV.vcf.gz",donor = sample_tab.donor),
-        pindel_vcf=lambda wildcards: expand("cnv_sv/pindel/{donor}.vcf",donor = sample_tab.donor),
-        svdb=lambda wildcards: expand("cnv_sv/svdb_query/{sample_name}.svdb_query.vcf",sample_name = sample_tab.sample_name),
-        final_report= "cnv_sv/final_report.html"
+    input:
+        final_report="cnv_sv/final_report.html"

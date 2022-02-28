@@ -1,8 +1,8 @@
 rule svdb_merge:
     input:
-        vcfs=expand("cnv_sv/{cnv_caller}_vcf/{{sample_name}}.vcf", cnv_caller=["cnvkit","gatk_cnv"], ),
+        vcfs=expand("variant_calls/{{sample_name}}/{cnv_caller}/CNV.vcf", cnv_caller=["cnvkit"]),
     output:
-        vcf="cnv_sv/svdb_merge/{sample_name}.merged.vcf",
+        vcf="final_CNV_calls/merged/{sample_name}.merged.vcf",
     params:
         overlap=0.6, #config.get("svdb_merge", {}).get("overlap", 0.6),
     log:
@@ -17,10 +17,10 @@ rule svdb_merge:
 # svdb_vcf from DBVAR = https://www.ncbi.nlm.nih.gov/dbvar/content/ftp_manifest/
 rule svdb_query:
     input:
-        vcf="cnv_sv/svdb_merge/{sample_name}.merged.vcf",
-        svdb_vcf=expand("{ref_dir}/other/dbvar/{ref_name}.variant_call.all.vcf",ref_dir=reference_directory,ref_name=config["reference"])[0], # "reference/normal_26_svdb_0.8.vcf"
+        vcf="final_CNV_calls/merged/{sample_name}.merged.vcf",
+        svdb_vcf=expand("{ref_dir}/other/svdb/gnomad_v2.1_sv.sites.vcf",ref_dir=reference_directory)[0], # "reference/normal_26_svdb_0.8.vcf"
     output:
-        vcf="cnv_sv/svdb_query/{sample_name}.svdb_query.vcf",
+        vcf="final_CNV_calls/{sample_name}.svdb_query.vcf",
     params:
         prefix=lambda wildcards, output: os.path.splitext(output[0])[0][:-6],
     log:
