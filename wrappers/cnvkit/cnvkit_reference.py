@@ -13,7 +13,7 @@ shell.executable("/bin/bash")
 
 
 if snakemake.input.normal_coverage_inputs:
-    command = "cnvkit.py reference " + snakemake.input.normal_coverage_inputs + \
+    command = "cnvkit.py reference " + " ".join(snakemake.input.normal_coverage_inputs) + \
               " --fasta " + snakemake.input.reference + \
               " -o " + snakemake.output.reference_cnn + \
               " >> " + log_filename + " 2>&1"

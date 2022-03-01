@@ -1,9 +1,9 @@
-#
-# def single_bam_input(wildcards):
-#     return expand("mapped/{input_bam}.bam",input_bam=sample_tab.loc[sample_tab.sample_name == wildcards.sample_name, "sample_name"])
-#
-# def single_bam_bai_input(wildcards):
-#     return expand("mapped/{input_bam}.bam.bai",input_bam=sample_tab.loc[sample_tab.sample_name == wildcards.sample_name, "sample_name"])
+
+def get_bam_input(wildcards):
+    if config["tumor_normal_paired"] == True:
+        return expand("mapped/{input_bam}.bam",input_bam=sample_tab.loc[(sample_tab["tumor_normal"] == wildcards.tumor_normal) & (sample_tab["donor"]==wildcards.sample_name), "sample_name"])[0],
+    else:
+        return expand("mapped/{input_bam}.bam",input_bam=wildcards.sample_name)[0]
 
 
 rule cnvkit_prepare_region_beds:
@@ -32,15 +32,9 @@ rule cnvkit_prepare_region_beds:
         mv $PWD/{params.antitarget} {output.antitarget}
         """
 
-def cnvkit_get_coverage_bam_input(wildcards):
-    if config["tumor_normal_paired"] == True:
-        return expand("mapped/{input_bam}.bam",input_bam=sample_tab.loc[(sample_tab["tumor_normal"] == wildcards.tumor_normal) & (sample_tab["donor"]==wildcards.sample_name), "sample_name"])[0],
-    else:
-        return expand("mapped/{input_bam}.bam",input_bam=wildcards.sample_name)[0]
-
 rule cnvkit_get_coverage:
     input:
-        bam= cnvkit_get_coverage_bam_input,
+        bam= get_bam_input,
         reference=expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],
         target="variant_calls/all_samples/cnvkit/target.bed",
         antitarget="variant_calls/all_samples/cnvkit/antitarget.bed"
@@ -61,7 +55,7 @@ rule cnvkit_get_coverage:
 def normal_coverage_inputs(wildcards):
     if config["tumor_normal_paired"] == True:
         return {'normal_coverage_inputs': set(expand("variant_calls/{sample_name}/cnvkit/normal_{tag}targetcoverage.cnn",sample_name=sample_tab.loc[
-            sample_tab.tumor_normal == "normal", "sample_name"].tolist(),tag = ["","anti"]))}
+            sample_tab.tumor_normal == "normal", "donor"].tolist(),tag = ["","anti"]))}
     else:
         if len(sample_tab.index) > 4:
             return {'normal_coverage_inputs': set(expand("variant_calls/{sample_name}/cnvkit/tumor_{tag}targetcoverage.cnn",sample_name=sample_tab.sample_name.tolist(),tag = ["","anti"]))}
@@ -196,7 +190,7 @@ rule cnvkit_convert_to_vcf:
         het_del_limit=config.get("cnvkit_vcf", {}).get("het_del_limit", 1.5),
         dup_limit=config.get("cnvkit_vcf", {}).get("dup_limit", 2.5),
     log:
-        "logs/{sample_name}/cnvkit/cnvkit_convert_to_vcf.log",
+        "logs/{sample_name}/cnvkit/convert_to_vcf.log",
     threads: 8
     conda:
         "../wrappers/cnvkit/env_python.yaml"

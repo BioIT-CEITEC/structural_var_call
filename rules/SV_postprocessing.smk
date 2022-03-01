@@ -1,10 +1,10 @@
 def final_report_inputs(wildcards):
     if config["tumor_normal_paired"] == True:
         return {'svdb': expand("final_CNV_calls/{sample_name}.svdb_query.vcf",sample_name=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()),
-                'manta': expand("variant_calls/{sample_name}/manta/results/variants/somaticSV.vcf.gz",sample_name=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist())}
+                'manta': expand("variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",sample_name=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist())}
     else:
         return {'svdb': expand("final_CNV_calls/{sample_name}.svdb_query.vcf",sample_name=sample_tab.sample_name),
-                'manta': expand("variant_calls/{sample_name}/manta/results/variants/somaticSV.vcf.gz",sample_name=sample_tab.sample_name)}
+                'manta': expand("variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",sample_name=sample_tab.sample_name)}
 
 rule final_report:
     input:

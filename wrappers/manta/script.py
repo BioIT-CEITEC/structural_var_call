@@ -8,14 +8,14 @@ from snakemake.shell import shell
 log_filename = str(snakemake.log)
 
 f = open(log_filename, 'wt')
-f.write("\n##\n## wrapper: somatic strelka \n##\n")
+f.write("\n##\n## wrapper: somatic manta \n##\n")
 f.close()
 
 shell.executable("/bin/bash")
 
-version = str(subprocess.Popen("configureStrelkaSomaticWorkflow.py --version 2>&1", shell=True, stdout=subprocess.PIPE).communicate()[0], 'utf-8')
+version = str(subprocess.Popen("configManta.py --version 2>&1", shell=True, stdout=subprocess.PIPE).communicate()[0], 'utf-8')
 f = open(log_filename, 'at')
-f.write("## VERSION: strelka "+version+"\n")
+f.write("## VERSION: manta "+version+"\n")
 f.close()
 
 #not implemented --targeted
@@ -34,12 +34,11 @@ if snakemake.params.calling_type:
               " --tumorBam " + snakemake.input.tumor + \
               " --referenceFasta " + snakemake.input.ref + \
               " --runDir " + snakemake.params.dir + \
-              " --disableEVS " + \
               " >> " + log_filename + " 2>&1"
 else:
-    command = "calling_type.py" + \
+    command = "configManta.py" + \
               scope + \
-              " --bam " + snakemake.input.tumor + \
+              " --tumorBam " + snakemake.input.tumor + \
               " --referenceFasta " + snakemake.input.ref + \
               " --runDir " + snakemake.params.dir + \
               " >> " + log_filename + " 2>&1"

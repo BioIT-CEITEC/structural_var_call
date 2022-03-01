@@ -31,14 +31,8 @@ rule manta:
         regions_gz=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
         regions_tbi=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz.tbi",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
     output:
-        cand_si_vcf="variant_calls/{sample_name}/manta/results/variants/candidateSmallIndels.vcf.gz",
-        cand_si_tbi="variant_calls/{sample_name}/manta/results/variants/candidateSmallIndels.vcf.gz.tbi",
-        cand_sv_vcf="variant_calls/{sample_name}/manta/results/variants/candidateSV.vcf.gz",
-        cand_sv_tbi="variant_calls/{sample_name}/manta/results/variants/candidateSV.vcf.gz.tbi",
-        dipl_sv_vcf="variant_calls/{sample_name}/manta/results/variants/diploidSV.vcf.gz",
-        dipl_sv_tbi="variant_calls/{sample_name}/manta/results/variants/diploidSV.vcf.gz.tbi",
-        som_sv_vcf="variant_calls/{sample_name}/manta/results/variants/somaticSV.vcf.gz",
-        som_sv_tbi="variant_calls/{sample_name}/manta/results/variants/somaticSV.vcf.gz.tbi",
+        som_sv_vcf="variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
+        som_sv_tbi="variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz.tbi",
     log: "logs/{sample_name}/callers/strelka.log"
     threads: 5
     resources:
