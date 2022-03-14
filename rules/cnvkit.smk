@@ -39,8 +39,8 @@ rule cnvkit_get_coverage:
         target="variant_calls/all_samples/cnvkit/target.bed",
         antitarget="variant_calls/all_samples/cnvkit/antitarget.bed"
     output:
-        targetcoverage="variant_calls/{sample_name}/cnvkit/{tumor_normal}_targetcoverage.cnn",
-        antitargetcoverage="variant_calls/{sample_name}/cnvkit/{tumor_normal}_antitargetcoverage.cnn",
+        targetcoverage="variant_calls/{sample_name}/cnvkit/{tumor_normal}.targetcoverage.cnn",
+        antitargetcoverage="variant_calls/{sample_name}/cnvkit/{tumor_normal}.antitargetcoverage.cnn",
     log:
         "logs/{sample_name}/cnvkit/{tumor_normal}_get_coverage.log"
     threads: workflow.cores
@@ -54,11 +54,11 @@ rule cnvkit_get_coverage:
 
 def normal_coverage_inputs(wildcards):
     if config["tumor_normal_paired"] == True:
-        return {'normal_coverage_inputs': set(expand("variant_calls/{sample_name}/cnvkit/normal_{tag}targetcoverage.cnn",sample_name=sample_tab.loc[
+        return {'normal_coverage_inputs': set(expand("variant_calls/{sample_name}/cnvkit/normal.{tag}targetcoverage.cnn",sample_name=sample_tab.loc[
             sample_tab.tumor_normal == "normal", "donor"].tolist(),tag = ["","anti"]))}
     else:
         if len(sample_tab.index) > 4:
-            return {'normal_coverage_inputs': set(expand("variant_calls/{sample_name}/cnvkit/tumor_{tag}targetcoverage.cnn",sample_name=sample_tab.sample_name.tolist(),tag = ["","anti"]))}
+            return {'normal_coverage_inputs': set(expand("variant_calls/{sample_name}/cnvkit/tumor.{tag}targetcoverage.cnn",sample_name=sample_tab.sample_name.tolist(),tag = ["","anti"]))}
         else:
             return {'target': "variant_calls/all_samples/cnvkit/target.bed",
                 'antitarget': "variant_calls/all_samples/cnvkit/antitarget.bed"}
@@ -84,8 +84,8 @@ rule cnvkit_prepare_reference:
 
 rule cnvkit_fix_and_segment:
     input:
-        targetcoverage="variant_calls/{sample_name}/cnvkit/tumor_targetcoverage.cnn",
-        antitargetcoverage="variant_calls/{sample_name}/cnvkit/tumor_antitargetcoverage.cnn",
+        targetcoverage="variant_calls/{sample_name}/cnvkit/tumor.targetcoverage.cnn",
+        antitargetcoverage="variant_calls/{sample_name}/cnvkit/tumor.antitargetcoverage.cnn",
         cnv_reference="variant_calls/all_samples/cnvkit/normal_reference.cnn",
     output:
         fix="variant_calls/{sample_name}/cnvkit/fixed_cov.cnr",

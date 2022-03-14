@@ -4,6 +4,7 @@ def final_report_inputs(wildcards):
                 'manta': expand("variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",sample_name=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist())}
     else:
         return {'svdb': expand("final_CNV_calls/{sample_name}.svdb_query.vcf",sample_name=sample_tab.sample_name),
+                'cnv_kit_cns': expand("variant_calls/{sample_name}/cnvkit/CNV_calls.cns",sample_name=sample_tab.sample_name),
                 'manta': expand("variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",sample_name=sample_tab.sample_name)}
 
 rule final_report:

@@ -1,6 +1,6 @@
 rule svdb_merge:
     input:
-        vcfs=expand("variant_calls/{{sample_name}}/{cnv_caller}/CNV.vcf", cnv_caller=["cnvkit","gatk_cnv"]),
+        vcfs=expand("variant_calls/{{sample_name}}/{cnv_caller}/CNV.vcf", cnv_caller=["gatk_cnv"]),
     output:
         vcf="final_CNV_calls/merged/{sample_name}.merged.vcf",
     params:

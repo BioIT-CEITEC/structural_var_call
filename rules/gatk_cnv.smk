@@ -2,7 +2,7 @@
 rule gatk_cnv_collect_allelic_counts:
     input:
         bam=get_bam_input,
-        interval=expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.interval_list",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
+        interval=expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
         ref=expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],
     output:
         "variant_calls/{sample_name}/gatk_cnv/{tumor_normal}_clean.allelicCounts.tsv",
