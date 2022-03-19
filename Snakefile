@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 
+configfile: "config.json"
 GLOBAL_REF_PATH = "/mnt/references/"
 # GLOBAL_REF_PATH = "/home/rj/4TB/CEITEC/"
 

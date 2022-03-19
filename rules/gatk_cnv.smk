@@ -104,7 +104,7 @@ rule gatk_cnv_model_segments:
         temp("variant_calls/{sample_name}/gatk_cnv/clean.modelFinal.cr.param"),
     params:
         outdir=lambda wildcards, output: os.path.dirname(output[0]),
-        outprefix="{sample_name}.clean",
+        outprefix="clean",
         extra="",
     log:
         "logs/{sample_name}/gatk_cnv/modelFinal.log",
@@ -152,7 +152,7 @@ rule gatk_cnv_vcf:
     log:
         "logs/{sample_name}/gatk_cnv/convert_to_vcf.log",
     threads: 8
-    conda:
-        "../wrappers/gatk/env_python.yaml"
+    # conda:
+    #     "../wrappers/gatk/env_python.yaml"
     script:
         "../wrappers/gatk/gatk_cnv_vcf.py"

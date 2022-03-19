@@ -29,4 +29,4 @@ rule svdb_query:
     conda:
         "../wrappers/svdb/env.yaml"
     shell:
-        "(svdb --query --query_vcf {input.vcf} --db {input.svdb_vcf} --prefix {params.prefix}) &> {log}"
+        "(svdb --query --query_vcf {input.vcf} --in_occ AC --in_frq AC --db {input.svdb_vcf} --prefix {params.prefix}) &> {log}"
