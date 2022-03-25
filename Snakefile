@@ -2,20 +2,21 @@ import os
 import pandas as pd
 
 configfile: "config.json"
-GLOBAL_REF_PATH = "/mnt/references/"
+GLOBAL_REF_PATH = config["globalResources"]
 # GLOBAL_REF_PATH = "/home/rj/4TB/CEITEC/"
 
 ##### Config processing #####
-#conversion from new SEQUIA json
+#conversion from json
 sample_tab = pd.DataFrame.from_dict(config["samples"],orient="index")
+
 # for CNV pipeline to get corresponding germinal sample column
-for index, row in sample_tab.iterrows():
-    donorvalue = sample_tab.loc[index,"donor"]
-    sample_tab.loc[index,"germinal"] = sample_tab.loc[(sample_tab["donor"] == donorvalue) & (sample_tab["tumor_normal"]=="normal"),"sample_name"].to_string(index=False)    
+# for index, row in sample_tab.iterrows():
+#     donorvalue = sample_tab.loc[index,"donor"]
+#     sample_tab.loc[index,"germinal"] = sample_tab.loc[(sample_tab["donor"] == donorvalue) & (sample_tab["tumor_normal"]=="normal"),"sample_name"].to_string(index=False)
 
+#### Reference info processing
 
-##### Reference processing
-#
+#### Setting reference from lib_ROI
 if config["lib_ROI"] != "wgs":
     # setting reference from lib_ROI
     f = open(os.path.join(GLOBAL_REF_PATH,"reference_info","lib_ROI.json"))
@@ -33,13 +34,12 @@ config["organism"] = [organism_name.lower().replace(" ","_") for organism_name i
 reference_directory = os.path.join(GLOBAL_REF_PATH,config["organism"],config["reference"])
 
 # ####################################
-# # DEFAULT VALUES
-# if not "format" in config:
-#     config["format"] = "default"
-# if not "min_variant_frequency" in config:
-#     config["min_variant_frequency"] = 0
-# if not "not_use_merged" in config:
-#     config["not_use_merged"] = False
+# # VARIALBES FROM CONFIG
+used_cnv_callers = []
+if config["use_gatk_cnv"]:
+    used_cnv_callers.append("gatk_cnv")
+if config["use_cnvkit"]:
+    used_cnv_callers.append("cnvkit")
 
 wildcard_constraints:
      tumor_normal = "tumor|normal",

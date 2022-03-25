@@ -28,16 +28,26 @@
   "gui_params" : {
     "primary": {
       "tumor_normal_paired": {
-        "label": "tumor normal paired samples",
+        "label": "Tumor-normal paired samples",
         "type": "bool",
         "default": false
       }
     },
     "detailed": {
-      "min_variant_frequency": {
-        "label": "Fake param",
-        "type": "int",
-        "default": 0
+      "use_gatk_cnv": {
+        "label": "Use GATK_cnv for variant calling.",
+        "type": "bool",
+        "default": true
+      },
+      "use_cnvkit": {
+        "label": "Use CNVkit for variant calling.",
+        "type": "bool",
+        "default": true
+      },
+      "use_manta": {
+        "label": "Use Manta for variant calling.",
+        "type": "bool",
+        "default": true
       }
     },
     "samples": {
@@ -47,7 +57,7 @@
         "default": ""
       },
       "tumor_normal": {
-        "label": "Tumor normal",
+        "label": "Tumor or normal",
         "type": "enum",
         "default": "normal",
         "list": {
