@@ -2,7 +2,7 @@
   "workflow_description": {
     "name":"structural_var_call",
     "version": 1.0,
-    "label":"Structural variant calling 2",
+    "label":"Structural variant calling 3",
     "type":"var_call",
     "inputs":[
       "mapped/{sample}.bam*"
@@ -11,6 +11,9 @@
       "variant_calls/*",
       "final_CNV_calls/*",
       "cnv_sv/final_report.html"
+    ],
+    "inputs_optional":[
+      "cohort_data/cohort_cnv_info.tar.gz"
     ],
     "report_index": "cnv_sv/final_report.html",
     "reports":[
@@ -44,8 +47,23 @@
         "type": "bool",
         "default": true
       },
+      "jabCoNtool": {
+        "label": "Use jabCoNtool for variant calling.",
+        "type": "bool",
+        "default": true
+      },
       "use_manta": {
         "label": "Use Manta for variant calling.",
+        "type": "bool",
+        "default": true
+      },
+      "use_cohort_data": {
+        "label": "Load coverage data from previous experiments for normal estimation. Need file: cohort_data/cohort_cnv_info.tar.gz",
+        "type": "bool",
+        "default": false
+      },
+      "create_cohort_data": {
+        "label": "Save info about coverage data to the cohort_cnv_info file. (include loaded cohort data)",
         "type": "bool",
         "default": true
       }
