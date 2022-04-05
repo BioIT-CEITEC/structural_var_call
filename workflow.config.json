@@ -47,6 +47,11 @@
         "type": "bool",
         "default": true
       },
+      "jabCoNtool": {
+        "label": "Use jabCoNtool for variant calling.",
+        "type": "bool",
+        "default": true
+      },
       "use_jabCoNtool": {
         "label": "Use jabCoNtool for variant calling.",
         "type": "bool",
