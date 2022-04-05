@@ -40,6 +40,8 @@ if config["use_gatk_cnv"]:
     used_cnv_callers.append("gatk_cnv")
 if config["use_cnvkit"]:
     used_cnv_callers.append("cnvkit")
+if config["use_jabCoNtool"]:
+    used_cnv_callers.append("jabCoNtool")
 
 wildcard_constraints:
      tumor_normal = "tumor|normal",
@@ -49,6 +51,7 @@ wildcard_constraints:
 # SEPARATE RULES
 include: "rules/cnvkit.smk"
 include: "rules/gatk_cnv.smk"
+include: "rules/jabCoNtool.smk"
 include: "rules/manta.smk"
 include: "rules/pindel.smk"
 include: "rules/svdb.smk"

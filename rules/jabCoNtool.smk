@@ -5,7 +5,7 @@ def get_bam_input(wildcards):
     else:
         return expand("mapped/{input_bam}.bam",input_bam=wildcards.sample_name)[0]
 
-rule per_sample_coverage_computing:
+rule jabCoNtool_per_sample_coverage:
     input:  bam= get_bam_input,
             region_bed = expand("{ref_dir}/intervals/{lib_ROI}/{lib_ROI}.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
     output: cov_tab = "variant_calls/{sample_name}/jabCoNtool/{tumor_normal}.region_coverage.tsv",
@@ -14,7 +14,7 @@ rule per_sample_coverage_computing:
     conda:  "../wrappers/jabCoNtool/per_sample_coverage_computing/env.yaml"
     script: "../wrappers/jabCoNtool/per_sample_coverage_computing/script.py"
 
-rule per_sample_snp_AF_computing:
+rule jabCoNtool_per_sample_snp_AF:
     input:  bam= get_bam_input,
             ref = expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],
             snp_bed = expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
@@ -25,7 +25,7 @@ rule per_sample_snp_AF_computing:
     script: "../wrappers/jabCoNtool/per_sample_snp_AF_computing/script.py"
 
 
-def cnv_computation_inputs(wildcards):
+def jabCoNtool_cnv_computation_inputs(wildcards):
     input_dict = {}
     if config["tumor_normal_paired"] == True:
         input_dict["normal_sample_cov"] = set(expand("variant_calls/{sample_name}/jabCoNtool/normal.region_coverage.tsv",sample_name=sample_tab.loc[
@@ -40,19 +40,21 @@ def cnv_computation_inputs(wildcards):
     if config["use_cohort_data"] == True:
         input_dict["cohort_data"] = "cohort_data/cohort_cnv_info.tar.gz"
 
+    return input_dict
 
-rule cnv_computation:
-    input: cnv_computation_inputs,
+
+rule jabCoNtool_cnv_computation:
+    input: unpack(jabCoNtool_cnv_computation_inputs),
            region_bed = expand("{ref_dir}/intervals/{lib_ROI}/{lib_ROI}.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
            snp_bed = expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
     output: all_res_prob_tab="variant_calls/all_samples/jabCoNtool/final_CNV_probs.tsv"
     log:    "logs/all_samples/jabCoNtool/cnv_computation.log",
     threads: 20
-    conda:  "../wraps/jabCoNtool/cnv_computation/env.yaml"
-    script: "../wraps/jabCoNtool/cnv_computation/script.py"
+    conda:  "../wrappers/jabCoNtool/cnv_computation/env.yaml"
+    script: "../wrappers/jabCoNtool/cnv_computation/script.py"
 
 
-rule get_per_sample_res:
+rule jabCoNtool_get_per_sample_res:
     input:  all_res_prob_tab="variant_calls/all_samples/jabCoNtool/final_CNV_probs.tsv"
     output: vcf="variant_calls/{sample_name}/jabCoNtool/CNV.vcf",
     log:    "logs/{sample_name}/jabCoNtool/get_per_sample_res.log",

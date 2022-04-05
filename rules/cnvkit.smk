@@ -114,14 +114,14 @@ rule vardict:
     resources:
         mem_mb=8000
     params:
-        AF_threshold=config["min_variant_frequency"]
+        AF_threshold=0.05
     conda: "../wrappers/vardict/env.yaml"
     script: "../wrappers/vardict/script.py"
 
 
 def vardict_SNV_vcf_input(wildcards):
     if config["tumor_normal_paired"] == True:
-        return expand("variant_calls/{sample_name}/cnvkit/vardict_SNV_{bam_name}.vcf",sample_name = wildcards.sample_name,input_bam=sample_tab.loc[(sample_tab["donor"] == wildcards.sample_name) & (sample_tab["tumor_normal"] == "normal"), "sample_name"])[0],
+        return expand("variant_calls/{sample_name}/cnvkit/vardict_SNV_{input_bam}.vcf",sample_name = wildcards.sample_name,input_bam=sample_tab.loc[(sample_tab["donor"] == wildcards.sample_name) & (sample_tab["tumor_normal"] == "normal"), "sample_name"])[0],
     else:
         return expand("variant_calls/{sample_name}/cnvkit/vardict_SNV_{sample_name}.vcf",sample_name = wildcards.sample_name)[0],
 
