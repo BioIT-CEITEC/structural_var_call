@@ -14,7 +14,7 @@ command = "alleleCounter " + \
             " -l " + snakemake.input.snp_bed + \
             " -b  " + snakemake.input.bam + \
             " -o " + snakemake.output.snp_tab + \
-            " >> " + snakemake.log.run + " 2>&1 "
+            " >> " + log_filename + " 2>&1 "
 
 f = open(log_filename, 'at')
 f.write("## COMMAND: "+command+"\n")

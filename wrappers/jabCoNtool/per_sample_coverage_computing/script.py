@@ -9,11 +9,11 @@ f = open(log_filename, 'wt')
 f.write("\n##\n## RULE: per_sample_coverage_counting \n##\n")
 f.close()
 
-command = "bedtools coverage " + \
+command = "bedtools coverage -sorted " + \
           " -a " + snakemake.input.region_bed + \
           " -b " + snakemake.input.bam + \
-          " > " + snakemake.output.cov_tab + \
-          " 2>> " + snakemake.log.run
+          " -g " + snakemake.input.ref_dict + \
+          " > " + snakemake.output.cov_tab
 
 f = open(log_filename, 'at')
 f.write("## COMMAND: "+command+"\n")

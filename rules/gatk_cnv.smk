@@ -11,6 +11,7 @@ rule gatk_cnv_collect_allelic_counts:
     log:
         "logs/{sample_name}/gatk_cnv/collect_allelic_counts_{tumor_normal}.log",
     threads: 8
+    resources: mem=1
     conda:
         "../wrappers/gatk/env.yaml"
     shell:
@@ -59,6 +60,7 @@ rule gatk_create_panel_of_normals:
     log:
         "logs/all_samples/gatk_cnv/create_panel_of_normals.log",
     threads: 8
+    resources: mem=10
     conda:
         "../wrappers/gatk/env.yaml"
     script:
@@ -77,6 +79,7 @@ rule gatk_cnv_denoise_read_counts:
     log:
         "logs/{sample_name}/gatk_cnv/denoiseCR.log",
     threads: 8
+    resources: mem=1
     conda:
         "../wrappers/gatk/env.yaml"
     shell:
@@ -109,6 +112,7 @@ rule gatk_cnv_model_segments:
     log:
         "logs/{sample_name}/gatk_cnv/modelFinal.log",
     threads: 8
+    resources: mem=1
     conda:
         "../wrappers/gatk/env.yaml"
     shell:
@@ -130,6 +134,7 @@ rule gatk_cnv_call_copy_ratio_segments:
     log:
         "logs/{sample_name}/gatk_cnv/calledCNVs.seg.log",
     threads: 8
+    resources: mem=1
     conda:
         "../wrappers/gatk/env.yaml"
     shell:
@@ -152,6 +157,7 @@ rule gatk_cnv_vcf:
     log:
         "logs/{sample_name}/gatk_cnv/convert_to_vcf.log",
     threads: 8
+    resources: mem=1
     # conda:
     #     "../wrappers/gatk/env_python.yaml"
     script:

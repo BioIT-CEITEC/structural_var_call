@@ -33,10 +33,9 @@ rule manta:
     output:
         som_sv_vcf="variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
         som_sv_tbi="variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz.tbi",
-    log: "logs/{sample_name}/callers/strelka.log"
+    log: "logs/{sample_name}/callers/manta.log"
     threads: 5
-    resources:
-        mem_mb=6000
+    resources: mem=6
     params: dir = "variant_calls/{sample_name}/manta",
             library_scope = config["lib_ROI"],
             calling_type = config["tumor_normal_paired"]
