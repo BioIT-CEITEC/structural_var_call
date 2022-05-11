@@ -66,4 +66,5 @@ include: "rules/SV_postprocessing.smk"
 # RULE ALL
 rule all:
     input:
-        final_report="cnv_sv/final_report.html"
+        final_report="cnv_sv/final_report.html",
+        all_res_prob_tab="variant_calls/all_samples/jabCoNtool/final_CNV_probs.tsv"

@@ -25,7 +25,11 @@ f.close()
 shell(command)
 
 
-#whoami ????
+#need to run SPARK correctly on local
+command = "export SPARK_LOCAL_HOSTNAME=localhost"
+f = open(log_filename, 'at')
+f.write("## COMMAND: "+command+"\n")
+f.close()
 
 for input_read_count in snakemake.input.germinal_read_counts:
     if len(snakemake.input.germinal_read_counts) > 0:
