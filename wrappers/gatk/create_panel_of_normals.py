@@ -31,6 +31,8 @@ f = open(log_filename, 'at')
 f.write("## COMMAND: "+command+"\n")
 f.close()
 
+shell(command)
+
 for input_read_count in snakemake.input.germinal_read_counts:
     if len(snakemake.input.germinal_read_counts) > 0:
         counts_string = counts_string + "-I " + input_read_count + " "
