@@ -20,7 +20,7 @@ rule jabCoNtool_per_sample_coverage:
 rule jabCoNtool_per_sample_snp_AF:
     input:  bam = get_bam_input,
             ref = expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],
-            snp_bed = expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
+            snp_tsv = expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.tsv",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
     output: snp_tab = "variant_calls/{sample_name}/jabCoNtool/{tumor_normal}.snpAF.tsv",
     log:    "logs/{sample_name}/jabCoNtool/{tumor_normal}_get_snpAF.log"
     threads: 1
