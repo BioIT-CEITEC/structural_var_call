@@ -12,19 +12,34 @@ f.close()
 
 shell.executable("/bin/bash")
 
-command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/cnv_computation.R" \
-                       + " " + snakemake.output.all_res_prob_tab \
-                       + " " + snakemake.input.region_bed\
-                       + " " + snakemake.input.snp_bed\
-                       + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
-                       + " tumor_cov " + " ".join(snakemake.input.tumor_sample_cov)\
-                       + " tumor_snp_AF " + " ".join(snakemake.input.tumor_snp_AF)\
-                       + " 2>> " + log_filename
-f = open(log_filename, 'a+')
+if snakemake.params.tumor_normal_paired:
+    command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/cnv_computation.R" \
+                            + " " + snakemake.output.all_res_prob_tab \
+                            + " " + snakemake.input.region_bed\
+                            + " " + snakemake.input.snp_bed \
+                            + " " + str(snakemake.params.tumor_normal_paired)\
+                            + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
+                            + " tumor_cov " + " ".join(snakemake.input.tumor_sample_cov)\
+                            + " tumor_snp_AF " + " ".join(snakemake.input.tumor_snp_AF) \
+                            + " normal_snp_AF " + " ".join(snakemake.input.normal_snp_AF) \
+                            + " 2>> " + log_filename
+    f = open(log_filename, 'a+')
+
+else:
+    command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/cnv_computation.R" \
+                            + " " + snakemake.output.all_res_prob_tab \
+                            + " " + snakemake.input.region_bed\
+                            + " " + snakemake.input.snp_bed \
+                            + " " + str(snakemake.params.tumor_normal_paired) \
+                            + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
+                            + " normal_snp_AF " + " ".join(snakemake.input.normal_snp_AF)\
+                            + " 2>> " + log_filename
+    f = open(log_filename, 'a+')
+
 f.write("## COMMAND: "+command+"\n")
 f.write("## args <- c(\"" + "\",\"".join(command.split(" ")[2:-3]) + "\")\n")
 f.close()
 
 command = "touch " + snakemake.output.all_res_prob_tab
 shell(command)
-# shell(command)
+

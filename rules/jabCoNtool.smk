@@ -37,7 +37,9 @@ def jabCoNtool_cnv_computation_inputs(wildcards):
         input_dict["tumor_sample_cov"] = set(expand("variant_calls/{sample_name}/jabCoNtool/tumor.region_coverage.tsv",sample_name=
             sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()))
         input_dict["tumor_snp_AF"] = set(expand("variant_calls/{sample_name}/jabCoNtool/tumor.snpAF.tsv",sample_name=
-        sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()))
+            sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()))
+        input_dict["normal_snp_AF"] = set(expand("variant_calls/{sample_name}/jabCoNtool/normal.snpAF.tsv",sample_name=
+            sample_tab.sample_name.tolist()))
     else:
         input_dict["normal_sample_cov"] = set(expand("variant_calls/{sample_name}/jabCoNtool/normal.region_coverage.tsv",sample_name=sample_tab.sample_name.tolist()))
         input_dict["normal_snp_AF"] = set(expand("variant_calls/{sample_name}/jabCoNtool/normal.snpAF.tsv",sample_name=sample_tab.sample_name.tolist()))
@@ -52,6 +54,7 @@ rule jabCoNtool_cnv_computation:
            region_bed = expand("{ref_dir}/intervals/{lib_ROI}/{lib_ROI}.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
            snp_bed = expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
     output: all_res_prob_tab="variant_calls/all_samples/jabCoNtool/final_CNV_probs.tsv"
+    params: tumor_normal_paired = config["tumor_normal_paired"]
     log:    "logs/all_samples/jabCoNtool/cnv_computation.log",
     threads: workflow.cores
     conda:  "../wrappers/jabCoNtool/cnv_computation/env.yaml"
