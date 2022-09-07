@@ -33,7 +33,9 @@ reference_dict = json.load(f)
 f.close()
 config["species_name"] = [organism_name for organism_name in reference_dict.keys() if isinstance(reference_dict[organism_name],dict) and config["reference"] in reference_dict[organism_name].keys()][0]
 config["organism"] = config["species_name"].split(" (")[0].lower().replace(" ","_")
-config["species"] = config["species_name"].split(" (")[1].replace(")","")
+if len(config["species_name"].split(" (")) > 1:
+    config["species"] = config["species_name"].split(" (")[1].replace(")","")
+
 
 
 #### FOLDERS
