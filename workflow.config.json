@@ -52,6 +52,11 @@
         "type": "bool",
         "default": true
       },
+      "use_control_freec": {
+        "label": "Use Control-FREEC for variant calling.",
+        "type": "bool",
+        "default": true
+      },
       "use_manta": {
         "label": "Use Manta for variant calling.",
         "type": "bool",

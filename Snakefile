@@ -44,6 +44,8 @@ if config["use_cnvkit"]:
     used_cnv_callers.append("cnvkit")
 if config["use_jabCoNtool"]:
     used_cnv_callers.append("jabCoNtool")
+if config["use_control_freec"]:
+    used_cnv_callers.append("control_freec")
 
 wildcard_constraints:
      tumor_normal = "tumor|normal",
@@ -54,6 +56,7 @@ wildcard_constraints:
 include: "rules/cnvkit.smk"
 include: "rules/gatk_cnv.smk"
 include: "rules/jabCoNtool.smk"
+include: "rules/control_freec.smk"
 include: "rules/manta.smk"
 include: "rules/pindel.smk"
 include: "rules/svdb.smk"
@@ -67,4 +70,4 @@ include: "rules/SV_postprocessing.smk"
 rule all:
     input:
         final_report="cnv_sv/final_report.html",
-        all_res_prob_tab="variant_calls/all_samples/jabCoNtool/final_CNV_probs.tsv"
+        # all_res_prob_tab="variant_calls/all_samples/jabCoNtool/final_CNV_probs.tsv"

@@ -18,9 +18,9 @@ if snakemake.params.tumor_normal_paired:
                             + " " + snakemake.input.region_bed\
                             + " " + snakemake.input.snp_bed \
                             + " " + str(snakemake.params.tumor_normal_paired)\
-                            + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
                             + " tumor_cov " + " ".join(snakemake.input.tumor_sample_cov)\
                             + " tumor_snp_AF " + " ".join(snakemake.input.tumor_snp_AF) \
+                            + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
                             + " normal_snp_AF " + " ".join(snakemake.input.normal_snp_AF) \
                             + " 2>> " + log_filename
     f = open(log_filename, 'a+')
