@@ -1,7 +1,7 @@
 
 def get_bam_input(wildcards):
     if config["tumor_normal_paired"] == True:
-        input_bam_name = sample_tab.loc[(sample_tab["tumor_normal"] == wildcards.tumor_normal) & (sample_tab["donor"]==wildcards.sample_name), "sample_name"].min()
+        input_bam_name = sample_tab.loc[(sample_tab["tumor_normal"] == wildcards.tumor_normal) & (sample_tab["donor"]==wildcards.sample_name), "sample_name"]
         return "mapped/" + input_bam_name + ".bam"
     else:
         return expand("mapped/{input_bam}.bam",input_bam=wildcards.sample_name)[0]

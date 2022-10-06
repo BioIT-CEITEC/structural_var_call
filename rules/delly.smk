@@ -24,7 +24,7 @@ def bam_inputs(wildcards):
 
 
 
-rule manta:
+rule delly:
     input:
         unpack(bam_inputs),
         ref = expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],

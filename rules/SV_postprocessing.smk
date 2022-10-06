@@ -6,17 +6,17 @@ def final_report_inputs(wildcards):
         tag = "merged"
 
     if config["tumor_normal_paired"] == True:
-        if len(used_cnv_callers) > 0:
+        if len(used_SV_callers) > 0:
             input['svdb'] = expand("final_SV_calls/{sample_name}.{tag}.vcf",tag = tag,sample_name=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist())
     else:
-        if len(used_cnv_callers) > 0:
+        if len(used_SV_callers) > 0:
             input['svdb'] = expand("final_SV_calls/{sample_name}.{tag}.vcf",tag = tag,sample_name=sample_tab.sample_name)
     return input
 
 rule final_report:
     input:
         unpack(final_report_inputs)
-    output: "cnv_sv/final_report.html"
+    output: "report/final_report.html"
     shell:
         "touch {output}"
 
