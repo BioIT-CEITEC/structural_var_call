@@ -36,9 +36,21 @@ filedata = filedata.replace('X_GC_profile_file_X', snakemake.input.GC_profile_fi
 filedata = filedata.replace('X_output_dir_X', os.path.dirname(snakemake.output.config))
 filedata = filedata.replace('X_input_bam_X', snakemake.input.tumor)
 
+if hasattr(snakemake.input, 'normal'):
+  filedata = filedata.replace('#normal_X__', '')
+  filedata = filedata.replace('X_input_control_bam_X', snakemake.input.normal)
+
 # Write the specific output
 with open(snakemake.output.config, 'w') as file:
   file.write(filedata)
+
+
+# command = "samtools view -b " + snakemake.input.tumor + " {1,10,11,12,13,14,15,16,17,18,19,2,21,22,3,4,5,6,7,8,9,X,Y} > " + snakemake.input.tumor + " 2>&1"
+#
+# f = open(log_filename, 'at')
+# f.write("## COMMAND: "+command+"\n")
+# f.close()
+# shell(command)
 
 command = "freec -conf " + snakemake.output.config + " >> " + log_filename + " 2>&1"
 

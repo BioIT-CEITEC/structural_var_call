@@ -32,12 +32,12 @@ rule control_freec:
         GC_profile_file = expand("{ref_dir}/other/GC_content_profile/GC_profile_{window_size}.cnp",ref_dir=reference_directory,ref_name=config["reference"],window_size="50000")[0],
         region_bed = expand("{ref_dir}/intervals/{lib_ROI}/{lib_ROI}.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
         snp_bed = expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
-        config_template = "../wrappers/control_freec/control_freec_config_template_WGS.txt"
+        config_template = "wrappers/control_freec/control_freec_config_template_WGS.txt"
     output:
         # info = "variant_calls/{sample_name}/control_freec/info.txt",
         # CNVs = "variant_calls/{sample_name}/control_freec/CNV.bed",
         config = "variant_calls/{sample_name}/control_freec/config.txt",
-        CNVs_vcf = "variant_calls/{sample_name}/control_freec/CNV.vcf",
+        CNVs_vcf = "variant_calls/{sample_name}/control_freec/result_SV.vcf",
     log: "logs/{sample_name}/callers/control_freec.log"
     threads: 5
     resources: mem=6
