@@ -27,7 +27,7 @@ if config["lib_ROI"] != "wgs":
     config["reference"] = [ref_name for ref_name in lib_ROI_dict.keys() if isinstance(lib_ROI_dict[ref_name],dict) and config["lib_ROI"] in lib_ROI_dict[ref_name].keys()][0]
 
 #### Setting organism from reference
-f = open(os.path.join(GLOBAL_REF_PATH,"reference_info","reference.json"),)
+f = open(os.path.join(GLOBAL_REF_PATH,"reference_info","reference.json"))
 reference_dict = json.load(f)
 f.close()
 config["organism"] = [organism_name.lower().replace(" ","_") for organism_name in reference_dict.keys() if isinstance(reference_dict[organism_name],dict) and config["reference"] in reference_dict[organism_name].keys()][0]
@@ -69,5 +69,4 @@ include: "rules/SV_postprocessing.smk"
 # RULE ALL
 rule all:
     input:
-        final_report="cnv_sv/final_report.html",
-        # all_res_prob_tab="variant_calls/all_samples/jabCoNtool/final_CNV_probs.tsv"
+        final_report="cnv_sv/final_report.html"
