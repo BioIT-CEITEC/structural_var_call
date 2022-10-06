@@ -147,7 +147,7 @@ rule gatk_cnv_vcf:
     input:
         segment="variant_calls/{sample_name}/gatk_cnv/clean.modelFinal.seg",
     output:
-        vcf="variant_calls/{sample_name}/gatk_cnv/CNV.vcf",
+        vcf="variant_calls/{sample_name}/gatk_cnv/result_SV.vcf",
     params:
         sample_id="{sample_name}",
         hom_del_limit=0.5, #dat do workflow.json

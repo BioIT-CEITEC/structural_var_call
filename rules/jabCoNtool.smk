@@ -63,7 +63,7 @@ rule jabCoNtool_cnv_computation:
 
 rule jabCoNtool_get_per_sample_res:
     input:  all_res_prob_tab="variant_calls/all_samples/jabCoNtool/final_CNV_probs.tsv"
-    output: vcf="variant_calls/{sample_name}/jabCoNtool/CNV.vcf",
+    output: vcf="variant_calls/{sample_name}/jabCoNtool/result_SV.vcf",
     log:    "logs/{sample_name}/jabCoNtool/get_per_sample_res.log",
     conda:  "../wrappers/jabCoNtool/get_per_sample_res/env.yaml"
     script: "../wrappers/jabCoNtool/get_per_sample_res/script.py"

@@ -1,15 +1,16 @@
 def final_report_inputs(wildcards):
     input = {}
+    if config["organism"] == "homo_sapiens":
+        tag = "svdb_query"
+    else:
+        tag = "merged"
+
     if config["tumor_normal_paired"] == True:
         if len(used_cnv_callers) > 0:
-            input['svdb'] = expand("final_CNV_calls/{sample_name}.svdb_query.vcf",sample_name=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist())
-        if config["use_manta"]:
-            input['manta'] = expand("variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",sample_name=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist())
+            input['svdb'] = expand("final_SV_calls/{sample_name}.{tag}.vcf",tag = tag,sample_name=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist())
     else:
         if len(used_cnv_callers) > 0:
-            input['svdb'] = expand("final_CNV_calls/{sample_name}.svdb_query.vcf",sample_name=sample_tab.sample_name)
-        if config["use_manta"]:
-            input['manta'] = expand("variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",sample_name=sample_tab.sample_name)
+            input['svdb'] = expand("final_SV_calls/{sample_name}.{tag}.vcf",tag = tag,sample_name=sample_tab.sample_name)
     return input
 
 rule final_report:

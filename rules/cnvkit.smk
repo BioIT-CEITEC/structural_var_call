@@ -187,7 +187,7 @@ rule cnvkit_convert_to_vcf:
     input:
         segment="variant_calls/{sample_name}/cnvkit/CNV_calls.cns",
     output:
-        vcf="variant_calls/{sample_name}/cnvkit/CNV.vcf",
+        vcf="variant_calls/{sample_name}/cnvkit/result_SV.vcf",
     params:
         sample_name="{sample_name}",
         hom_del_limit=config.get("cnvkit_vcf", {}).get("hom_del_limit", 0.5),

@@ -58,7 +58,6 @@ outputDir = X_output_dir_X
 [sample]
 
 mateFile = X_input_bam_X
-#mateCopyNumberFile = test/sample.cpn
 inputFormat = BAM
 mateOrientation = RF
 
@@ -66,12 +65,10 @@ mateOrientation = RF
 
 [control]
 
-#mateFile = /path/control.pileup.gz
-#mateCopyNumberFile = path/control.cpn
-#inputFormat = pileup
+#normal_X__mateFile = X_input_control_bam_X
+#normal_X__inputFormat = BAM
+#normal_X__mateOrientation = RF
 
-
-#mateOrientation = RF
 
 #[BAF]
 

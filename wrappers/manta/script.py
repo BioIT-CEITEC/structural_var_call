@@ -61,7 +61,12 @@ shell(command)
 shell("rm -fR " + snakemake.params.dir + "/workspace")
 
 
+command = "gunzip -c " + snakemake.params.manta_sv_vcf + " > " + snakemake.output.vcf
 
+f = open(log_filename, 'a+')
+f.write("## COMMAND: "+command+"\n")
+f.close()
+shell(command)
 
 
 

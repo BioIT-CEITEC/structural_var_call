@@ -9,15 +9,15 @@
     ],
     "outputs":[
       "variant_calls/*",
-      "final_CNV_calls/*",
-      "cnv_sv/final_report.html"
+      "final_SV_calls/*",
+      "reports/final_report.html"
     ],
     "inputs_optional":[
       "cohort_data/cohort_cnv_info.tar.gz"
     ],
-    "report_index": "cnv_sv/final_report.html",
+    "report_index": "reports/final_report.html",
     "reports":[
-      "cnv_sv/final_report.html"
+      "reports/final_report.html"
     ]
   },
   "general_params": [
@@ -59,6 +59,16 @@
       },
       "use_manta": {
         "label": "Use Manta for variant calling.",
+        "type": "bool",
+        "default": true
+      },
+      "use_gridss": {
+        "label": "Use GRIDSS for variant calling.",
+        "type": "bool",
+        "default": true
+      },
+      "use_delly": {
+        "label": "Use Delly2 for variant calling.",
         "type": "bool",
         "default": true
       },

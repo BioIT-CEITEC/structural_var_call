@@ -37,7 +37,7 @@ reference_directory = os.path.join(GLOBAL_REF_PATH,config["organism"],config["re
 
 # ####################################
 # # VARIALBES FROM CONFIG
-used_cnv_callers = []
+used_SV_callers = []
 if config["use_gatk_cnv"]:
     used_cnv_callers.append("gatk_cnv")
 if config["use_cnvkit"]:
@@ -46,6 +46,11 @@ if config["use_jabCoNtool"]:
     used_cnv_callers.append("jabCoNtool")
 if config["use_control_freec"]:
     used_cnv_callers.append("control_freec")
+if config["use_manta"]:
+    used_cnv_callers.append("manta")
+if config["use_gridss"]:
+    used_cnv_callers.append("gridss")
+
 
 wildcard_constraints:
      tumor_normal = "tumor|normal",
@@ -58,7 +63,8 @@ include: "rules/gatk_cnv.smk"
 include: "rules/jabCoNtool.smk"
 include: "rules/control_freec.smk"
 include: "rules/manta.smk"
-include: "rules/pindel.smk"
+include: "rules/delly.smk"
+include: "rules/gridss.smk"
 include: "rules/svdb.smk"
 include: "rules/SV_postprocessing.smk"
 # include: "rules/vep.smk"
@@ -69,4 +75,4 @@ include: "rules/SV_postprocessing.smk"
 # RULE ALL
 rule all:
     input:
-        final_report="cnv_sv/final_report.html"
+        final_report="report/final_report.html"
