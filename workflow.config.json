@@ -37,6 +37,11 @@
       }
     },
     "detailed": {
+      "wgs_bin_size": {
+        "label": "Bin size to split genome to in WGS",
+        "type": "int",
+        "default": 50000
+      },
       "use_gatk_cnv": {
         "label": "Use GATK_cnv for variant calling.",
         "type": "bool",

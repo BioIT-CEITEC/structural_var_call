@@ -18,7 +18,7 @@ breakPointThreshold = .8
 ##Either coefficientOfVariation or window must be specified for whole genome sequencing data. Set window=0 for exome sequencing data.
 
 #coefficientOfVariation = 0.01
-window = 50000
+window = X_window_X
 #step=10000
 
 ##Either chrFiles or GCcontentProfile must be specified too if no control dataset is available.

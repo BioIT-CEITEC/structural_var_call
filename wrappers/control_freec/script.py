@@ -31,6 +31,7 @@ with open(snakemake.input.config_template, 'r') as file :
   filedata = file.read()
 
 # Replace specific parameters
+filedata = filedata.replace('X_window_X', str(snakemake.params.window))
 filedata = filedata.replace('X_ref_fai_X', snakemake.input.ref_fai)
 filedata = filedata.replace('X_GC_profile_file_X', snakemake.input.GC_profile_file)
 filedata = filedata.replace('X_output_dir_X', os.path.dirname(snakemake.output.config))
