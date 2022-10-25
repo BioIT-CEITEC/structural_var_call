@@ -1,4 +1,5 @@
 
+
 rule gridss_computation:
     input:  bams = expand("mapped/{sample_name}.bam",sample_name=sample_tab.sort_values(by=['tumor_normal']).sample_name.tolist()),
             ref = expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],
@@ -8,12 +9,12 @@ rule gridss_computation:
     params: tumor_normal_paired = config["tumor_normal_paired"]
     log:    "logs/all_samples/gridss/gridss_computation.log",
     threads: 16
-    conda:  "../wrappers/gridss/cnv_computation/env.yaml"
-    script: "../wrappers/gridss/cnv_computation/script.py"
+    conda:  "../wrappers/gridss/env.yaml"
+    script: "../wrappers/gridss/script.py"
 
 
 rule gridss_get_per_sample_res:
-    input:  all_sample_vcf="variant_calls/all_samples/jabCoNtool/final_CNV_probs.tsv"
+    input:  all_sample_vcf="variant_calls/all_samples/gridss/all_sample_variants.vcf"
     output: vcf="variant_calls/{sample_name}/gridss/result_SV.vcf",
     log:    "logs/{sample_name}/gridss/get_per_sample_res.log",
     shell:

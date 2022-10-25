@@ -38,7 +38,7 @@ rule control_freec:
         # CNVs = "variant_calls/{sample_name}/control_freec/CNV.bed",
         config = "variant_calls/{sample_name}/control_freec/config.txt",
         CNVs_vcf = "variant_calls/{sample_name}/control_freec/result_SV.vcf",
-    log: "logs/{sample_name}/callers/control_freec.log"
+    log: "logs/{sample_name}/control_freec/control_freec.log"
     threads: 5
     resources: mem=6
     params: sample_name = "variant_calls/{sample_name}/manta",

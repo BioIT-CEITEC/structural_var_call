@@ -31,7 +31,7 @@ rule manta:
         regions_gz=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
         regions_tbi=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz.tbi",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
     output: vcf="variant_calls/{sample_name}/manta/result_SV.vcf",
-    log: "logs/{sample_name}/callers/manta.log"
+    log: "logs/{sample_name}/manta/manta.log"
     threads: 5
     resources: mem=6
     params: dir = "variant_calls/{sample_name}/manta",

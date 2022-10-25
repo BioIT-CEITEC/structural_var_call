@@ -67,6 +67,7 @@ include: "rules/delly.smk"
 include: "rules/gridss.smk"
 include: "rules/svdb.smk"
 include: "rules/SV_postprocessing.smk"
+include: "rules/common_prep.smk"
 # include: "rules/vep.smk"
 
 

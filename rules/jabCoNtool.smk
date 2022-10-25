@@ -10,7 +10,7 @@ def get_region_bed_input(wildcards):
     if config["lib_ROI"] != "wgs":
         return expand("{ref_dir}/intervals/{lib_ROI}/{lib_ROI}.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0]
     else:
-        return expand("variant_calls/all_samples/binned_genome_{window_size}.bed",window_size=config["wgs_bin_size"])[0],
+        return expand("variant_calls/all_samples/binned_genome_{window_size}.bed",window_size=config["wgs_bin_size"])[0]
 
 rule jabCoNtool_per_sample_coverage:
     input:  bam= get_bam_input,
