@@ -50,6 +50,8 @@ if config["use_manta"]:
     used_SV_callers.append("manta")
 if config["use_gridss"]:
     used_SV_callers.append("gridss")
+if config["use_delly"]:
+    used_SV_callers.append("delly")
 
 
 wildcard_constraints:

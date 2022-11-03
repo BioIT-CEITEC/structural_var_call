@@ -31,16 +31,16 @@ rule delly:
         regions_gz=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
         regions_tbi=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz.tbi",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
     output:
-        som_sv_vcf="variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
-        som_sv_tbi="variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz.tbi",
-    log: "logs/{sample_name}/callers/manta.log"
-    threads: 5
+        som_sv_vcf="variant_calls/{sample_name}/delly/results/variants/tumorSV.vcf.gz",
+    log: "logs/{sample_name}/callers/delly.log"
+    threads: 5 #best to use as many as there are samples
     resources: mem=6
-    params: dir = "variant_calls/{sample_name}/manta",
-            library_scope = config["lib_ROI"],
-            calling_type = config["tumor_normal_paired"]
-    conda:  "../wrappers/manta/env.yaml"
-    script: "../wrappers/manta/script.py"
+    params: dir = "variant_calls/{sample_name}/delly",
+            delly_sv_vcf="variant_calls/{sample_name}/delly/results/variants/tumorSV.vcf.gz",
+            library_scope=config["lib_ROI"],
+            calling_type=config["tumor_normal_paired"]
+    conda:  "../wrappers/delly/env.yaml"
+    script: "../wrappers/delly/script.py"
 
 # rule manta:
 #     input:
