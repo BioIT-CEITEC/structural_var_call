@@ -43,7 +43,7 @@ rule cnvkit_get_coverage:
         antitargetcoverage="variant_calls/{sample_name}/cnvkit/{tumor_normal}.antitargetcoverage.cnn",
     log:
         "logs/{sample_name}/cnvkit/{tumor_normal}_get_coverage.log"
-    threads: 1
+    threads: 10
     resources: mem=10
     conda:
         "../wrappers/cnvkit/env.yaml"
@@ -97,8 +97,8 @@ rule cnvkit_fix_and_segment:
         extra="",
     log:
         "logs/{sample_name}/cnvkit/cnvkit_fix_and_segment.log"
-    threads: 1
-    resources: mem=10
+    threads: 8
+    resources: mem=8
     conda:
         "../wrappers/cnvkit/env.yaml"
     script:
@@ -138,7 +138,7 @@ rule cnvkit_call:
         extra=""
     log:
         "logs/{sample_name}/cnvkit/cnvkit_call.log"
-    threads: 1
+    threads: 8
     resources: mem=10
     conda:
         "../wrappers/cnvkit/env.yaml"
@@ -157,7 +157,7 @@ rule cnvkit_diagram:
         extra="",
     log:
         "logs/{sample_name}/cnvkit/cnvkit_diagram.log"
-    threads: 1
+    threads: 8
     resources: mem=10
     conda:
         "../wrappers/cnvkit/env.yaml"
@@ -175,7 +175,7 @@ rule cnvkit_scatter:
         extra="",
     log:
         "logs/{sample_name}/cnvkit/cnvkit_scatter.log"
-    threads: 1
+    threads: 8
     resources: mem=10
     conda:
         "../wrappers/cnvkit/env.yaml"
@@ -195,7 +195,7 @@ rule cnvkit_convert_to_vcf:
         dup_limit=config.get("cnvkit_vcf", {}).get("dup_limit", 2.5),
     log:
         "logs/{sample_name}/cnvkit/convert_to_vcf.log",
-    threads: 1
+    threads: 8
     resources: mem=10
     conda:
         "../wrappers/cnvkit/env_python.yaml"

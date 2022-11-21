@@ -18,7 +18,7 @@ rule jabCoNtool_per_sample_coverage:
             ref_dict= expand("{ref_dir}/seq/{ref_name}.fa.fai",ref_dir=reference_directory,ref_name=config["reference"])[0],
     output: cov_tab = "variant_calls/{sample_name}/jabCoNtool/{tumor_normal}.region_coverage.tsv",
     log:    "logs/{sample_name}/jabCoNtool/{tumor_normal}_get_coverage.log"
-    threads: 1
+    threads: 8
     resources: mem=10
     conda:  "../wrappers/jabCoNtool/per_sample_coverage_computing/env.yaml"
     script: "../wrappers/jabCoNtool/per_sample_coverage_computing/script.py"
@@ -29,7 +29,7 @@ rule jabCoNtool_per_sample_snp_AF:
             snp_tsv = expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.tsv",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
     output: snp_tab = "variant_calls/{sample_name}/jabCoNtool/{tumor_normal}.snpAF.tsv",
     log:    "logs/{sample_name}/jabCoNtool/{tumor_normal}_get_snpAF.log"
-    threads: 1
+    threads: 8
     resources: mem=10
     conda:  "../wrappers/jabCoNtool/per_sample_snp_AF_computing/env.yaml"
     script: "../wrappers/jabCoNtool/per_sample_snp_AF_computing/script.py"
