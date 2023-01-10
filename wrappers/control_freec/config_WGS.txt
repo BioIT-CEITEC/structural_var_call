@@ -1,0 +1,40 @@
+###For more options see: http://boevalab.com/FREEC/tutorial.html#CONFIG ###
+
+[general]
+
+bedtools=bedtools
+sambamba=sambamba
+
+chrLenFile = X_ref_fai_X
+window = X_window_X
+ploidy = 2
+
+maxThreads = X_threads_X
+
+outputDir = X_outputDir_X
+breakPointThreshold = 0.8
+breakPointType=4
+
+GCcontentProfile = X_GCcontentProfile_X
+gemMappabilityFile = X_gemMappabilityFile_X
+
+#contaminationAdjustment = TRUE
+#contamination = 0.4
+
+BedGraphOutput=TRUE
+
+[sample]
+
+inputFormat = BAM
+mateOrientation = 0
+
+[control]
+inputFormat = BAM
+mateOrientation = 0
+
+[BAF]
+
+#SNPfile = X_SNPfile_X
+#minimalCoveragePerPosition = 5
+
+[target]

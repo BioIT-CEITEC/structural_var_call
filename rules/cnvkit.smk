@@ -49,20 +49,21 @@ rule cnvkit_get_coverage:
         "../wrappers/cnvkit/env.yaml"
     shell:
         """
-        cnvkit.py coverage {input.bam} {input.target} -o {output.targetcoverage} &> {log}
-        cnvkit.py coverage {input.bam} {input.antitarget} -o {output.antitargetcoverage} &>> {log}
+        cnvkit.py coverage -p {threads} {input.bam} {input.target} -o {output.targetcoverage} &> {log}
+        cnvkit.py coverage -p {threads} {input.bam} {input.antitarget} -o {output.antitargetcoverage} &>> {log}
         """
 
 def normal_coverage_inputs(wildcards):
-    if config["tumor_normal_paired"] == True:
+    if config["tumor_normal_paired"] == True: #normal reference
         return {'normal_coverage_inputs': set(expand("variant_calls/{sample_name}/cnvkit/normal.{tag}targetcoverage.cnn",sample_name=sample_tab.loc[
             sample_tab.tumor_normal == "normal", "donor"].tolist(),tag = ["","anti"]))}
     else:
-        if len(sample_tab.index) > 4:
+        if len(sample_tab.index) > 4: # pool of all samples in the run if >4
             return {'normal_coverage_inputs': set(expand("variant_calls/{sample_name}/cnvkit/tumor.{tag}targetcoverage.cnn",sample_name=sample_tab.sample_name.tolist(),tag = ["","anti"]))}
-        else:
+        else: # FlatReference of neutral copy number (
             return {'target': "variant_calls/all_samples/cnvkit/target.bed",
                 'antitarget': "variant_calls/all_samples/cnvkit/antitarget.bed"}
+
 
 rule cnvkit_prepare_reference:
     input:
@@ -70,6 +71,8 @@ rule cnvkit_prepare_reference:
         reference=expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],
     output:
         reference_cnn="variant_calls/all_samples/cnvkit/normal_reference.cnn",
+    params:
+        scope=config["lib_ROI"]
     log:
         "logs/all_samples/cnvkit_prepare_reference.log"
     threads: workflow.cores
@@ -77,11 +80,7 @@ rule cnvkit_prepare_reference:
         "../wrappers/cnvkit/env.yaml"
     script:
         "../wrappers/cnvkit/cnvkit_reference.py"
-    # shell:
-    #     """
-    #     cnvkit.py reference {params.folder}/*.{{,anti}}targetcoverage.cnn --fasta {input.reference} -o {output.reference_cnn} &> {log}
-    #     """
-#jak to udelat jinak cnv_sv/cnvkit_prepare_reference/*.{{,anti}}targetcoverage.cnn pres snakemake, alespon cestu - {params.folder}/*.{{,anti}}targetcoverage.cnn
+
 
 rule cnvkit_fix_and_segment:
     input:
@@ -95,9 +94,10 @@ rule cnvkit_fix_and_segment:
         outdir=lambda wildcards, output: os.path.dirname(output[0]),
         method="hybrid",
         extra="",
+        scope=config["lib_ROI"]
     log:
         "logs/{sample_name}/cnvkit/cnvkit_fix_and_segment.log"
-    threads: 8
+    threads: 10
     resources: mem=8
     conda:
         "../wrappers/cnvkit/env.yaml"
@@ -112,7 +112,7 @@ rule vardict:
             regions=expand("{ref_dir}/intervals/{lib_ROI}/{lib_ROI}.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0],
     output: vcf="variant_calls/{sample_name}/cnvkit/vardict_SNV_{bam_name}.vcf",
     log: "logs/{sample_name}/cnvkit/{bam_name}_vardict.log"
-    threads: 8
+    threads: 5
     resources: mem=8
     params:
         AF_threshold=0.05
@@ -135,10 +135,10 @@ rule cnvkit_call:
         calls="variant_calls/{sample_name}/cnvkit/CNV_calls.cns",
     params:
         TC=0.5, #lambda wildcards: sample_tab.loc[wildcards.sample_name, 'donor'], #tumor content?
-        extra=""
+        scope=config["lib_ROI"]
     log:
         "logs/{sample_name}/cnvkit/cnvkit_call.log"
-    threads: 8
+    threads: 10
     resources: mem=10
     conda:
         "../wrappers/cnvkit/env.yaml"
@@ -157,7 +157,7 @@ rule cnvkit_diagram:
         extra="",
     log:
         "logs/{sample_name}/cnvkit/cnvkit_diagram.log"
-    threads: 8
+    threads: 10
     resources: mem=10
     conda:
         "../wrappers/cnvkit/env.yaml"
@@ -175,7 +175,7 @@ rule cnvkit_scatter:
         extra="",
     log:
         "logs/{sample_name}/cnvkit/cnvkit_scatter.log"
-    threads: 8
+    threads: 10
     resources: mem=10
     conda:
         "../wrappers/cnvkit/env.yaml"
@@ -195,7 +195,7 @@ rule cnvkit_convert_to_vcf:
         dup_limit=config.get("cnvkit_vcf", {}).get("dup_limit", 2.5),
     log:
         "logs/{sample_name}/cnvkit/convert_to_vcf.log",
-    threads: 8
+    threads: 10
     resources: mem=10
     conda:
         "../wrappers/cnvkit/env_python.yaml"

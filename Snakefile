@@ -11,10 +11,17 @@ GLOBAL_REF_PATH = config["globalResources"]
 #conversion from json
 sample_tab = pd.DataFrame.from_dict(config["samples"],orient="index")
 
+print(sample_tab)
+
 # for CNV pipeline to get corresponding germinal sample column
 # for index, row in sample_tab.iterrows():
 #     donorvalue = sample_tab.loc[index,"donor"]
 #     sample_tab.loc[index,"germinal"] = sample_tab.loc[(sample_tab["donor"] == donorvalue) & (sample_tab["tumor_normal"]=="normal"),"sample_name"].to_string(index=False)
+
+# CONTROL-FREEC works as germinal/without control in WGS mode
+if config["lib_ROI"] != "wgs" and config["tumor_normal_paired"] == False:
+    config["use_control_freec"]=False
+
 
 #### Reference info processing
 
@@ -59,12 +66,12 @@ wildcard_constraints:
 ####################################
 # SEPARATE RULES
 include: "rules/cnvkit.smk"
-include: "rules/gatk_cnv.smk"
-include: "rules/jabCoNtool.smk"
+# include: "rules/gatk_cnv.smk"
+# include: "rules/jabCoNtool.smk"
 include: "rules/control_freec.smk"
-include: "rules/manta.smk"
-include: "rules/delly.smk"
-include: "rules/gridss.smk"
+# include: "rules/manta.smk"
+# include: "rules/delly.smk"
+# include: "rules/gridss.smk"
 include: "rules/svdb.smk"
 include: "rules/SV_postprocessing.smk"
 include: "rules/common_prep.smk"
@@ -76,4 +83,5 @@ include: "rules/common_prep.smk"
 # RULE ALL
 rule all:
     input:
-        final_report="report/final_report.html"
+        final_report="report/final_report.html",
+        FREEC=expand("variant_calls/{sample_name}/control_freec/{sample_name}.bam_CNVs",sample_name=sample_tab.donor)
