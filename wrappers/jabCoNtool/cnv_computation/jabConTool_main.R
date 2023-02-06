@@ -564,19 +564,19 @@ run_all <- function(args){
 
 
 # develop and test
-input_var_call_dirs <- list.files("input_files/CNV/variant_calls/",full.names = T)
-input_var_call_dirs <- setdiff(input_var_call_dirs,"input_files/CNV/variant_calls//all_samples")
-cov_files <- paste0(input_var_call_dirs,"/jabCoNtool/normal.region_coverage.tsv")
-snp_files <- paste0(input_var_call_dirs,"/jabCoNtool/normal.snpAF.tsv")
-args <- c("results/CNV_result_tab.tsv",
-          "input_files/CNV/variant_calls/all_samples/binned_genome_50000.bed",
-          "no_use_snps",
-          "tumor_only",
-          "wgs",
-          "input_files/CNV/variant_calls/all_samples/GC_profile_50000.cnp",
-          "GRCh38_cytoBand.tsv",
-          "True",
-          "cov",cov_files)
+# input_var_call_dirs <- list.files("input_files/CNV/variant_calls/",full.names = T)
+# input_var_call_dirs <- setdiff(input_var_call_dirs,"input_files/CNV/variant_calls//all_samples")
+# cov_files <- paste0(input_var_call_dirs,"/jabCoNtool/normal.region_coverage.tsv")
+# snp_files <- paste0(input_var_call_dirs,"/jabCoNtool/normal.snpAF.tsv")
+# args <- c("results/CNV_result_tab.tsv",
+#           "input_files/CNV/variant_calls/all_samples/binned_genome_50000.bed",
+#           "no_use_snps",
+#           "tumor_only",
+#           "wgs",
+#           "input_files/CNV/variant_calls/all_samples/GC_profile_50000.cnp",
+#           "GRCh38_cytoBand.tsv",
+#           "True",
+#           "cov",cov_files)
 
 
 #run as Rscript
