@@ -31,12 +31,12 @@ rule delly:
         regions_gz=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
         regions_tbi=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz.tbi",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
     output:
-        som_sv_vcf="variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
-        som_sv_tbi="variant_calls/{sample_name}/manta/results/variants/tumorSV.vcf.gz.tbi",
+        som_sv_vcf="structural_varcalls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
+        som_sv_tbi="structural_varcalls/{sample_name}/manta/results/variants/tumorSV.vcf.gz.tbi",
     log: "logs/{sample_name}/callers/manta.log"
     threads: 5
     resources: mem=6
-    params: dir = "variant_calls/{sample_name}/manta",
+    params: dir = "structural_varcalls/{sample_name}/manta",
             library_scope = config["lib_ROI"],
             calling_type = config["tumor_normal_paired"]
     conda:  "../wrappers/manta/env.yaml"

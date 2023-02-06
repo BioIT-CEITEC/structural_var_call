@@ -12,30 +12,68 @@ f.close()
 
 shell.executable("/bin/bash")
 
+if hasattr(snakemake.input, "snp_bed"):
+    panel_snps_filename = snakemake.input.snp_bed
+    snp_AF_files = "snp_AF " + " ".join(snakemake.input.tumor_snp_AF)
+    if snakemake.params.tumor_normal_paired:
+        normal_snp_AF_files = "normal_snp_AF " + " ".join(snakemake.input.normal_snp_AF)
+else:
+    panel_snps_filename = "no_use_snps"
+    snp_AF_files = ""
+    normal_snp_AF_files = ""
+
+if hasattr(snakemake.input, "snp_bed"):
+    panel_snps_filename = snakemake.input.snp_bed
+else:
+    panel_snps_filename = "no_use_snps"
+
+if hasattr(snakemake.input, "jabCoNtool_normalize_to_GC"):
+    GC_normalization_file = snakemake.input.GC_profile_file
+else:
+    GC_normalization_file = "no_GC_norm"
+
+if hasattr(snakemake.input, "cytoband_file"):
+    cytoband_file = snakemake.input.cytoband_file
+else:
+    cytoband_file = "no_cytoband"
+
+if snakemake.params.lib_ROI == "wgs":
+    library_type = "wgs"
+else:
+    library_type = "panel"
+
 if snakemake.params.tumor_normal_paired:
-    command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/cnv_computation.R" \
-                            + " " + snakemake.output.all_res_prob_tab \
-                            + " " + snakemake.input.region_bed\
-                            + " " + snakemake.input.snp_bed \
-                            + " " + str(snakemake.params.tumor_normal_paired)\
-                            + " tumor_cov " + " ".join(snakemake.input.tumor_sample_cov)\
-                            + " tumor_snp_AF " + " ".join(snakemake.input.tumor_snp_AF) \
-                            + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
-                            + " normal_snp_AF " + " ".join(snakemake.input.normal_snp_AF) \
-                            + " 2>> " + log_filename
-    f = open(log_filename, 'a+')
+    command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/jabConTool_main.R" \
+                    + " " + snakemake.output.all_res_prob_tab \
+                    + " " + snakemake.input.region_bed\
+                    + " " + panel_snps_filename \
+                    + " " + snakemake.params.calling_type \
+                    + " " + library_type \
+                    + " " + GC_normalization_file \
+                    + " " + cytoband_file \
+                    + " " + snakemake.params.jabCoNtool_predict_TL \
+                    + " cov " + " ".join(snakemake.input.tumor_sample_cov)\
+                    + snp_AF_files \
+                    + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
+                    + normal_snp_AF_files \
+                    + " 2>> " + log_filename
 
 else:
-    command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/cnv_computation.R" \
-                            + " " + snakemake.output.all_res_prob_tab \
-                            + " " + snakemake.input.region_bed\
-                            + " " + snakemake.input.snp_bed \
-                            + " " + str(snakemake.params.tumor_normal_paired) \
-                            + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
-                            + " normal_snp_AF " + " ".join(snakemake.input.normal_snp_AF)\
-                            + " 2>> " + log_filename
-    f = open(log_filename, 'a+')
+    command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/jabConTool_main.R" \
+                    + " " + snakemake.output.all_res_prob_tab \
+                    + " " + snakemake.input.region_bed\
+                    + " " + panel_snps_filename \
+                    + " " + snakemake.params.calling_type \
+                    + " " + library_type \
+                    + " " + GC_normalization_file \
+                    + " " + cytoband_file \
+                    + " " + snakemake.params.jabCoNtool_predict_TL \
+                    + " cov " + " ".join(snakemake.input.tumor_sample_cov)\
+                    + snp_AF_files \
+                    + " 2>> " + log_filename
 
+
+f = open(log_filename, 'a+')
 f.write("## COMMAND: "+command+"\n")
 f.write("## args <- c(\"" + "\",\"".join(command.split(" ")[2:-3]) + "\")\n")
 f.close()

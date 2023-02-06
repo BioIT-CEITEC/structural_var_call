@@ -61,7 +61,7 @@ f.close()
 shell(command)
 
 # remove workspace - lots of files messing copying speeds
-shell("touch " + snakemake.output.CNVs_vcf)
+shell("cp " snakemake.params.control_freec_outfile + " " + snakemake.output.CNVs_vcf)
 
 
 

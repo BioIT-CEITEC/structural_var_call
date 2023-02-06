@@ -1,20 +1,12 @@
 import os
 import pandas as pd
 
-
-#testhh
 configfile: "config.json"
 GLOBAL_REF_PATH = config["globalResources"]
-# GLOBAL_REF_PATH = "/home/rj/4TB/CEITEC/"
+
 
 ##### Config processing #####
-#conversion from json
 sample_tab = pd.DataFrame.from_dict(config["samples"],orient="index")
-
-# for CNV pipeline to get corresponding germinal sample column
-# for index, row in sample_tab.iterrows():
-#     donorvalue = sample_tab.loc[index,"donor"]
-#     sample_tab.loc[index,"germinal"] = sample_tab.loc[(sample_tab["donor"] == donorvalue) & (sample_tab["tumor_normal"]=="normal"),"sample_name"].to_string(index=False)
 
 #### Reference info processing
 
@@ -38,14 +30,15 @@ reference_directory = os.path.join(GLOBAL_REF_PATH,config["organism"],config["re
 # ####################################
 # # VARIALBES FROM CONFIG
 used_SV_callers = []
+used_CNV_callers = []
 if config["use_gatk_cnv"]:
-    used_SV_callers.append("gatk_cnv")
+    used_CNV_callers.append("gatk_cnv")
 if config["use_cnvkit"]:
-    used_SV_callers.append("cnvkit")
+    used_CNV_callers.append("cnvkit")
 if config["use_jabCoNtool"]:
-    used_SV_callers.append("jabCoNtool")
+    used_CNV_callers.append("jabCoNtool")
 if config["use_control_freec"]:
-    used_SV_callers.append("control_freec")
+    used_CNV_callers.append("control_freec")
 if config["use_manta"]:
     used_SV_callers.append("manta")
 if config["use_gridss"]:
@@ -64,9 +57,9 @@ include: "rules/jabCoNtool.smk"
 include: "rules/control_freec.smk"
 include: "rules/manta.smk"
 include: "rules/delly.smk"
-include: "rules/gridss.smk"
+# include: "rules/gridss.smk"
 include: "rules/svdb.smk"
-include: "rules/SV_postprocessing.smk"
+include: "rules/variant_postprocessing.smk"
 include: "rules/common_prep.smk"
 # include: "rules/vep.smk"
 
@@ -74,6 +67,12 @@ include: "rules/common_prep.smk"
 
 ####################################
 # RULE ALL
+def all_inputs(wildcards):
+    input_dict = {}
+    input_dict["final_report"] = "final_variant_table.tsv",
+    if config["create_cohort_data"] == True:
+        input_dict["cohort_data_update_tag"] = "cohort_data/cohort_data_updated"
+    return input_dict
+
 rule all:
-    input:
-        final_report="report/final_report.html"
+    input: unpack(all_inputs)

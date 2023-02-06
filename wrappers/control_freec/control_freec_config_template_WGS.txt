@@ -59,7 +59,7 @@ outputDir = X_output_dir_X
 
 mateFile = X_input_bam_X
 inputFormat = BAM
-mateOrientation = RF
+mateOrientation = 0
 
 ##use "mateOrientation=0" for sorted .SAM and .BAM
 
@@ -67,7 +67,7 @@ mateOrientation = RF
 
 #normal_X__mateFile = X_input_control_bam_X
 #normal_X__inputFormat = BAM
-#normal_X__mateOrientation = RF
+#normal_X__mateOrientation = 0
 
 
 #[BAF]
