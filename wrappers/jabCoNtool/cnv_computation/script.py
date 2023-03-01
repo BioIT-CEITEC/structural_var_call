@@ -14,8 +14,8 @@ shell.executable("/bin/bash")
 
 if hasattr(snakemake.input, "snp_bed"):
     panel_snps_filename = snakemake.input.snp_bed
-    snp_AF_files = "snp_AF " + " ".join(snakemake.input.tumor_snp_AF)
-    if snakemake.params.tumor_normal_paired:
+    snp_AF_files = "snp_AF " + " ".join(snakemake.input.snp_AF)
+    if snakemake.params.calling_type == "tumor_normal":
         normal_snp_AF_files = "normal_snp_AF " + " ".join(snakemake.input.normal_snp_AF)
 else:
     panel_snps_filename = "no_use_snps"
@@ -42,7 +42,7 @@ if snakemake.params.lib_ROI == "wgs":
 else:
     library_type = "panel"
 
-if snakemake.params.tumor_normal_paired:
+if snakemake.params.calling_type == "tumor_normal":
     command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/jabConTool_main.R" \
                     + " " + snakemake.output.all_res_prob_tab \
                     + " " + snakemake.input.region_bed\
@@ -51,8 +51,8 @@ if snakemake.params.tumor_normal_paired:
                     + " " + library_type \
                     + " " + GC_normalization_file \
                     + " " + cytoband_file \
-                    + " " + snakemake.params.jabCoNtool_predict_TL \
-                    + " cov " + " ".join(snakemake.input.tumor_sample_cov)\
+                    + " " + str(snakemake.params.jabCoNtool_predict_TL) \
+                    + " cov " + " ".join(snakemake.input.sample_cov)\
                     + snp_AF_files \
                     + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
                     + normal_snp_AF_files \
@@ -67,8 +67,8 @@ else:
                     + " " + library_type \
                     + " " + GC_normalization_file \
                     + " " + cytoband_file \
-                    + " " + snakemake.params.jabCoNtool_predict_TL \
-                    + " cov " + " ".join(snakemake.input.tumor_sample_cov)\
+                    + " " + str(snakemake.params.jabCoNtool_predict_TL) \
+                    + " cov " + " ".join(snakemake.input.sample_cov)\
                     + snp_AF_files \
                     + " 2>> " + log_filename
 

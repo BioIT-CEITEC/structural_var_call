@@ -9,7 +9,7 @@ fread_vector_of_files <- function(file_list,sample_names){
   return(rbindlist(list_of_tabs,use.names = T,idcol = "sample"))
 }
 
-load_panel_intervals <- function(panel_intervals_filename){
+load_panel_intervals <- function(panel_intervals_filename,library_type){
   panel_intervals <- fread(panel_intervals_filename)
   if(length(panel_intervals) > 4){
     panel_intervals <- panel_intervals[,1:4,with = F]
@@ -19,8 +19,10 @@ load_panel_intervals <- function(panel_intervals_filename){
   }
   setnames(panel_intervals,c("chr","start","end","region_name"))
   
-  #remove regions smaller then 1/2 of size
-  panel_intervals <- panel_intervals[end - start > (max(end - start) / 2) ,]
+  if(library_type == "wgs"){
+    #remove regions smaller then 1/2 of size
+    panel_intervals <- panel_intervals[end - start > (max(end - start) / 2) ,]
+  }
   
   if(length(unique(panel_intervals$region_name)) < nrow(panel_intervals)){
     panel_intervals[,region_name_suffix := paste0("_",as.character(seq_along(start))),by = region_name]
@@ -36,9 +38,9 @@ load_panel_intervals <- function(panel_intervals_filename){
 
 get_cov_tab <- function(sample_tab,panel_intervals,join_intervals_distance = 0){
   cov_tab <- fread_vector_of_files(sample_tab$cov_tab_filenames,sample_tab$sample)
-  cov_tab[,c("V5","V6","V7") := NULL]
-  setnames(cov_tab,c("sample","chr","start","end","cov_raw"))
-  
+  cov_tab[,tail(names(cov_tab),3) := NULL]
+  setnames(cov_tab,c("V1","V2","V3"),c("chr","start","end"))
+  setnames(cov_tab,tail(names(cov_tab),1),c("cov_raw"))
   
   # chr X a Y pořešíme později, zatím analýza bez něj, aby nezkresloval výsledky
   #homsap hack TODO
@@ -108,8 +110,8 @@ get_snp_tab <- function(sample_tab,panel_snps_filename,panel_intervals,individua
   snp_tab[,max_pos_cov := max(cov),by = .(chr,pos) ]
   
   snp_tab <- snp_tab[max_pos_cov > max_pos_cov_threshold]
-  snp_tab[cov < individual_cov_threshold,ref_count := NA]
-  snp_tab[cov < individual_cov_threshold,alt_count := NA]
+  # snp_tab[cov < individual_cov_threshold,ref_count := NA]
+  # snp_tab[cov < individual_cov_threshold,alt_count := NA]
   
   snp_tab[,cov := NULL]
   snp_tab[,max_pos_cov := NULL]
@@ -133,7 +135,7 @@ load_and_prefilter_sample_data <- function(sample_tab,
   
   normalization_sample_type <- tail(sort(sample_tab$type),1)
   
-  panel_intervals <- load_panel_intervals(panel_intervals_filename)
+  panel_intervals <- load_panel_intervals(panel_intervals_filename,library_type)
   cov_tab <- get_cov_tab(sample_tab,panel_intervals)
   
   if(library_type == "wgs"){
@@ -220,11 +222,9 @@ load_and_prefilter_sample_data <- function(sample_tab,
 
 
 
-create_copy_number_categories_default_tabs <- function(cn_to_predict = "all",predict_LOH = T){
+create_copy_number_categories_default_tabs <- function(default_cn_rel_prob_vec = c(1,2,500,2,1,0.5,2),cn_to_predict = "all",predict_LOH = T){
   
-  default_cn_rel_prob_vec <- c(1,2,1000,2,1,0.5,2)
-  
-  
+
   if(cn_to_predict == "all"){
     cn_to_predict <- c("0","1","2","3","4","5","LOH")
   }
@@ -254,21 +254,10 @@ create_copy_number_categories_default_tabs <- function(cn_to_predict = "all",pre
   
 create_transition_matrix <- function(cn_categories_tab){
   
-  # prior cn_categories_vec prob dist (probably setable parameter)
-  # prior_cn_categories_prob_dist <- c(1,2,0,2,1,0.5,2) / 1000
-  # names(prior_cn_categories_prob_dist) <- cn_categories_vec
-  # prior_cn_categories_prob_dist["2"] <- 1 - sum(prior_cn_categories_prob_dist)
-  
-  transition_matrix <- matrix(0,nrow = length(cn_categories_tab$cn_category),ncol = length(cn_categories_tab$cn_category))
-  transition_matrix[,which(cn_categories_tab$cn_category == "2")] <- 1
-  for(i in seq_len(length(cn_categories_tab$cn_category))[-1]){
-    transition_matrix[i,i-1] <- 0.1
-    transition_matrix[i-1,i] <- 0.1
-  }
-  diag(transition_matrix) <- 500
-  transition_matrix[which(cn_categories_tab$cn_category == "2"),] <- cn_categories_tab$cn_rel_prob
-  # transition_matrix[which(cn_categories_tab$cn_category == "2"),which(cn_categories_tab$cn_category == "2")] <- 2* transition_matrix[which(cn_categories_tab$cn_category == "2"),which(cn_categories_tab$cn_category == "2")]
-  transition_matrix <- transition_matrix / rowSums(transition_matrix)
+  transition_matrix <- matrix(cn_categories_tab$cn_norm_prob,nrow(cn_categories_tab),nrow(cn_categories_tab))
+  transition_matrix[which(cn_categories_tab$cn_category == "2"),] <- 1/nrow(cn_categories_tab)
+  diag(transition_matrix) <- max(cn_categories_tab$cn_norm_prob)
+  transition_matrix <- t(t(transition_matrix) / rowSums(t(transition_matrix)))
   
   return(transition_matrix)
 }
@@ -282,13 +271,16 @@ prepare_transition_matrix_list <- function(transition_matrix,cn_categories_tab,c
   #alternative simple yes no 
   # region_list[,trans_prob := as.numeric(dist < dist_transition_treshold)] # ---  simple yes no 
   
-  nlog_transition_matrix <- -log(transition_matrix)
-  nlog_transition_matrix[nlog_transition_matrix == Inf] <- 10000
   #independent_prior_matrix == no information from predicted probs from previous region - distant non correlated regions
   independent_prior_matrix <- matrix(cn_categories_tab$cn_norm_prob,nrow(cn_categories_tab),nrow(cn_categories_tab))
-  nlog_independent_prior_matrix <- -log(independent_prior_matrix)
   
-  trans_mat_list <- lapply(region_list$trans_prob,function(trans_prob) t(nlog_transition_matrix * trans_prob + nlog_independent_prior_matrix * (1 - trans_prob)))
+  trans_mat_list <- lapply(region_list$trans_prob,function(trans_prob) {
+    res <- t(transition_matrix * trans_prob + independent_prior_matrix * (1 - trans_prob))
+    res <- -log(res)
+    res[res == Inf] <- 1000
+    return(res)
+  })
+  
   return(trans_mat_list)
 }
 

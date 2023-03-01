@@ -27,7 +27,7 @@ else:
 
 shell("rm -fR " + snakemake.params.dir)
 
-if snakemake.params.calling_type:
+if snakemake.params.calling_type == "tumor_normal":
     command = "configManta.py" + \
               scope + \
               " --normalBam " + snakemake.input.normal + \

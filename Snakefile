@@ -46,7 +46,7 @@ if config["use_gridss"]:
 
 
 wildcard_constraints:
-     tumor_normal = "tumor|normal",
+     tumor_normal = "tumor|normal|sample",
 
 
 ####################################

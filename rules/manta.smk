@@ -11,7 +11,7 @@
 #     return expand("mapped/{input_bam}.bam.bai",input_bam=sample_tab.loc[(sample_tab["tumor_normal"] == "tumor") & (sample_tab["donor"]==wildcards.donor), "sample_name"])
 
 def bam_inputs(wildcards):
-    if config["tumor_normal_paired"] == True:
+    if config["calling_type"] == "tumor_normal":
         return {'tumor': expand("mapped/{input_bam}.bam",input_bam=sample_tab.loc[(sample_tab["tumor_normal"] == "tumor") & (sample_tab["donor"]==wildcards.sample_name), "sample_name"])[0],
                 'normal':expand("mapped/{input_bam}.bam",input_bam=sample_tab.loc[(sample_tab["tumor_normal"] == "normal") & (sample_tab["donor"]==wildcards.sample_name), "sample_name"])[0]}
     else:
@@ -37,7 +37,7 @@ rule manta:
     params: dir = "structural_varcalls/{sample_name}/manta",
             manta_sv_vcf="structural_varcalls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
             library_scope = config["lib_ROI"],
-            calling_type = config["tumor_normal_paired"]
+            calling_type = config["calling_type"]
     conda:  "../wrappers/manta/env.yaml"
     script: "../wrappers/manta/script.py"
 

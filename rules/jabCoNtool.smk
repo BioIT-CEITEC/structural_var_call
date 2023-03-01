@@ -1,6 +1,6 @@
 
 def get_bam_input(wildcards):
-    if config["tumor_normal_paired"] == True:
+    if config["calling_type"] == "tumor_normal":
         input_bam_name = sample_tab.loc[(sample_tab["tumor_normal"] == wildcards.tumor_normal) & (sample_tab["donor"]==wildcards.sample_name), "sample_name"]
         return "mapped/" + input_bam_name + ".bam"
     else:
@@ -37,20 +37,20 @@ rule jabCoNtool_per_sample_snp_AF:
 
 def jabCoNtool_cnv_computation_inputs(wildcards):
     input_dict = {}
-    if config["tumor_normal_paired"] == True:
+    if config["calling_type"] == "tumor_normal":
         input_dict["normal_sample_cov"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/normal.region_coverage.tsv",sample_name=sample_tab.loc[
             sample_tab.tumor_normal == "normal", "donor"].tolist()))
-        input_dict["tumor_sample_cov"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/tumor.region_coverage.tsv",sample_name=
+        input_dict["sample_cov"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/tumor.region_coverage.tsv",sample_name=
             sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()))
         if config["jabCoNtool_use_snps"] == True:
-            input_dict["tumor_snp_AF"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/tumor.snpAF.tsv",sample_name=
+            input_dict["snp_AF"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/tumor.snpAF.tsv",sample_name=
                 sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()))
             input_dict["normal_snp_AF"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/normal.snpAF.tsv",sample_name=
                 sample_tab.sample_name.tolist()))
     else:
-        input_dict["normal_sample_cov"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/normal.region_coverage.tsv",sample_name=sample_tab.sample_name.tolist()))
+        input_dict["sample_cov"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/sample.region_coverage.tsv",sample_name=sample_tab.sample_name.tolist()))
         if config["jabCoNtool_use_snps"] == True:
-            input_dict["normal_snp_AF"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/normal.snpAF.tsv",sample_name=sample_tab.sample_name.tolist()))
+            input_dict["snp_AF"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/sample.snpAF.tsv",sample_name=sample_tab.sample_name.tolist()))
     if config["use_cohort_data"] == True:
         input_dict["cohort_data"] = "cohort_data/cohort_cnv_info.tar.gz"
     if config["lib_ROI"] == "wgs":
@@ -78,11 +78,9 @@ rule jabCoNtool_cnv_computation:
     script: "../wrappers/jabCoNtool/cnv_computation/script.py"
 
 
-rule jabCoNtool_get_per_sample_res:
-    input:  all_res_prob_tab="structural_varcalls/all_samples/jabCoNtool/final_CNV_probs.tsv"
-    output: tsv="structural_varcalls/{sample_name}/jabCoNtool/CNV_varcalls.tsv.vcf",
-    log:    "logs/{sample_name}/jabCoNtool/get_per_sample_res.log",
-    shell:
-        "touch {output.tsv}"
-    # conda:  "../wrappers/jabCoNtool/get_per_sample_res/env.yaml"
-    # script: "../wrappers/jabCoNtool/get_per_sample_res/script.py"
+# rule jabCoNtool_get_per_sample_res:
+#     input:  all_res_prob_tab="structural_varcalls/all_samples/jabCoNtool/final_CNV_probs.tsv"
+#     output: CNV_res="structural_varcalls/{sample_name}/jabCoNtool/CNV_varcalls.tsv",
+#     log:    "logs/{sample_name}/jabCoNtool/get_per_sample_res.log",
+#     conda:  "../wrappers/jabCoNtool/get_per_sample_res/env.yaml"
+#     script: "../wrappers/jabCoNtool/get_per_sample_res/script.py"

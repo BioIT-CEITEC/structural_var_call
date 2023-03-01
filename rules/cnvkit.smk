@@ -1,6 +1,6 @@
 
 def get_bam_input(wildcards):
-    if config["tumor_normal_paired"] == True:
+    if config["calling_type"] == "tumor_normal":
         return expand("mapped/{input_bam}.bam",input_bam=sample_tab.loc[(sample_tab["tumor_normal"] == wildcards.tumor_normal) & (sample_tab["donor"]==wildcards.sample_name), "sample_name"])[0],
     else:
         return expand("mapped/{input_bam}.bam",input_bam=wildcards.sample_name)[0]
@@ -55,7 +55,7 @@ rule cnvkit_get_coverage:
 
 def normal_coverage_inputs(wildcards):
     input_dict = {}
-    if config["tumor_normal_paired"] == True:
+    if config["calling_type"] == "tumor_normal":
         input_dict["normal_coverage_inputs"] = set(expand("structural_varcalls/{sample_name}/cnvkit/normal.{tag}targetcoverage.cnn",sample_name=sample_tab.loc[
             sample_tab.tumor_normal == "normal", "donor"].tolist(),tag = ["","anti"]))
     else:
@@ -65,8 +65,9 @@ def normal_coverage_inputs(wildcards):
             input_dict["target"] = "structural_varcalls/all_samples/cnvkit/target.bed",
             input_dict["antitarget"] = "structural_varcalls/all_samples/cnvkit/antitarget.bed"
     if config["use_cohort_data"] == True:
-        return "cohort_data/cohort_cnv_info.tar.gz"
+        input_dict["cohort_data"] =  "cohort_data/cohort_cnv_info.tar.gz"
 
+    return input_dict
 
 rule cnvkit_prepare_reference:
     input:
@@ -125,7 +126,7 @@ rule vardict:
 
 
 def vardict_SNV_vcf_input(wildcards):
-    if config["tumor_normal_paired"] == True:
+    if config["calling_type"] == "tumor_normal":
         return expand("structural_varcalls/{sample_name}/cnvkit/vardict_SNV_{input_bam}.vcf",sample_name = wildcards.sample_name,input_bam=sample_tab.loc[(sample_tab["donor"] == wildcards.sample_name) & (sample_tab["tumor_normal"] == "normal"), "sample_name"])[0],
     else:
         return expand("structural_varcalls/{sample_name}/cnvkit/vardict_SNV_{sample_name}.vcf",sample_name = wildcards.sample_name)[0],

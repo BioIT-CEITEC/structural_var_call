@@ -46,7 +46,7 @@ rule gatk_cnv_collect_read_counts:
         "-O {output}) &> {log}"
 
 def normal_read_counts_input(wildcards):
-    if config["tumor_normal_paired"] == True:
+    if config["calling_type"] == "tumor_normal":
         return expand("structural_varcalls/{sample_name}/gatk_cnv/normal_read_counts.hdf5",sample_name=sample_tab.loc[
                 sample_tab.tumor_normal == "normal", "donor"].tolist())
     else:

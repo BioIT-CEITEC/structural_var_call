@@ -11,7 +11,7 @@
 #     return expand("mapped/{input_bam}.bam.bai",input_bam=sample_tab.loc[(sample_tab["tumor_normal"] == "tumor") & (sample_tab["donor"]==wildcards.donor), "sample_name"])
 
 def bam_inputs(wildcards):
-    if config["tumor_normal_paired"] == True:
+    if config["calling_type"] == "tumor_normal":
         return {'tumor': expand("mapped/{input_bam}.bam",input_bam=sample_tab.loc[(sample_tab["tumor_normal"] == "tumor") & (sample_tab["donor"]==wildcards.sample_name), "sample_name"])[0],
                 'normal':expand("mapped/{input_bam}.bam",input_bam=sample_tab.loc[(sample_tab["tumor_normal"] == "normal") & (sample_tab["donor"]==wildcards.sample_name), "sample_name"])[0]}
     else:
@@ -43,7 +43,6 @@ rule control_freec:
     resources: mem=6
     params: control_freec_outfile = "structural_varcalls/{sample_name}/control_freec/{sample_name}.bam_CNVs",
             library_scope = config["lib_ROI"],
-            calling_type = config["tumor_normal_paired"],
             window_size= config["wgs_bin_size"]
     conda:  "../wrappers/control_freec/env.yaml"
     script: "../wrappers/control_freec/script.py"

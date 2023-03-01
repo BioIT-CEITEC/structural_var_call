@@ -1,51 +1,5 @@
-suppressMessages(library(data.table))
-suppressMessages(library(stringi))
-suppressMessages(library(zoo))
-suppressPackageStartupMessages(library(proxy))
-library(fitdistrplus)
-library(ggfortify)
-library(parallel)
-library(pheatmap)
+library(data.table)
 
-annotate_with_intervals <- function(var_tab,annot_tab,annotate_cols_names = tail(names(annot_tab),1)){
-  location_tab <- var_tab[,list(chr,pos)]
-  location_tab <- unique(location_tab)
-  location_tab <- location_tab[,type := "b_var"][,index := seq_along(type)]
-  setorder(annot_tab)
-  DB <- copy(annot_tab)
-  DB_start <- DB[,c(1,2),with = F][,type := "a_start"][,index := seq_along(type)]
-  setnames(DB_start,c(1:2),c("chr","pos"))
-  DB_end <- DB[,c(1,3),with = F][,type := "end"][,index := 0]
-  setnames(DB_end,c(1:2),c("chr","pos"))
-  DB <- rbind(DB_start,DB_end)
-  DB <- rbind(DB,location_tab)
-  setorder(DB)
-  indeces <- mapply(seq, which(DB$type == "a_start") + 1, which(DB$type == "end"))
-  indeces <- lapply(indeces,function(x) x[-1])
-  indeces_var <- unlist(indeces)
-  indeces_start <- rep(seq_along(indeces),sapply(indeces,length))
-  select_DB <- DB[indeces_var - 1][,start_idx := indeces_start]
-  select_DB <- unique(select_DB[type == "b_var"],by = c("chr","pos"))
-  location_tab[select_DB$index,(annotate_cols_names) := annot_tab[select_DB$start_idx,annotate_cols_names,with = F]]
-  location_tab[,type := NULL]
-  location_tab[,index := NULL]
-  var_tab <- merge(var_tab,location_tab,by = c("chr","pos"))
-  return(var_tab)
-}
-
-fread_vector_of_files <- function(file_list,regex,add_column = "sample"){
-  list_of_tabs <- lapply(file_list,function(x){
-    res <- fread(x)
-    res[,(add_column) := gsub(regex,"\\1",x)]
-    if(nrow(res) > 0){
-      return(res)
-    } else {
-      return(NULL)
-    }
-  })
-  
-  return(rbindlist(list_of_tabs))
-}
 
 run_all <- function(args){
   out_filename <- args[1]
