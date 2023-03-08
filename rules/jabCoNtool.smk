@@ -62,7 +62,7 @@ def jabCoNtool_cnv_computation_inputs(wildcards):
     else:
         input_dict["region_bed"] = expand("{ref_dir}/intervals/{lib_ROI}/{lib_ROI}.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0]
     if config["jabCoNtool_use_snps"] == True:
-        input_dict["snp_bed"] = expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0]
+        input_dict["snp_bed"] = expand("{ref_dir}/other/snp/{lib_ROI}/{lib_ROI}_snps.tsv",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0]
     return input_dict
 
 

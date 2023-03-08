@@ -12,15 +12,15 @@ f.close()
 
 shell.executable("/bin/bash")
 
-if hasattr(snakemake.input, "snp_bed"):
-    panel_snps_filename = snakemake.input.snp_bed
-    snp_AF_files = "snp_AF " + " ".join(snakemake.input.snp_AF)
-    if snakemake.params.calling_type == "tumor_normal":
-        normal_snp_AF_files = "normal_snp_AF " + " ".join(snakemake.input.normal_snp_AF)
-else:
-    panel_snps_filename = "no_use_snps"
-    snp_AF_files = ""
-    normal_snp_AF_files = ""
+# if hasattr(snakemake.input, "snp_bed"):
+#     panel_snps_filename = snakemake.input.snp_bed
+#     snp_AF_files = "snp_AF " + " ".join(snakemake.input.snp_AF)
+#     if snakemake.params.calling_type == "tumor_normal":
+#         normal_snp_AF_files = "normal_snp_AF " + " ".join(snakemake.input.normal_snp_AF)
+# else:
+#     panel_snps_filename = "no_use_snps"
+#     snp_AF_files = ""
+#     normal_snp_AF_files = ""
 
 if hasattr(snakemake.input, "snp_bed"):
     panel_snps_filename = snakemake.input.snp_bed
@@ -53,9 +53,7 @@ if snakemake.params.calling_type == "tumor_normal":
                     + " " + cytoband_file \
                     + " " + str(snakemake.params.jabCoNtool_predict_TL) \
                     + " cov " + " ".join(snakemake.input.sample_cov)\
-                    + snp_AF_files \
                     + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
-                    + normal_snp_AF_files \
                     + " 2>> " + log_filename
 
 else:
@@ -69,7 +67,6 @@ else:
                     + " " + cytoband_file \
                     + " " + str(snakemake.params.jabCoNtool_predict_TL) \
                     + " cov " + " ".join(snakemake.input.sample_cov)\
-                    + snp_AF_files \
                     + " 2>> " + log_filename
 
 
@@ -77,7 +74,8 @@ f = open(log_filename, 'a+')
 f.write("## COMMAND: "+command+"\n")
 f.write("## args <- c(\"" + "\",\"".join(command.split(" ")[2:-3]) + "\")\n")
 f.close()
-
-command = "touch " + snakemake.output.all_res_prob_tab
 shell(command)
+
+# command = "touch " + snakemake.output.all_res_prob_tab
+
 

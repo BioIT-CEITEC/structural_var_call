@@ -1,15 +1,15 @@
-suppressMessages(library(data.table))
-suppressMessages(library(stringi))
-suppressMessages(library(zoo))
-suppressPackageStartupMessages(library(proxy))
+library(data.table)
+# suppressMessages(library(stringi))
+# suppressMessages(library(zoo))
+# suppressPackageStartupMessages(library(proxy))
 library(fitdistrplus)
-library(ggfortify)
-library(parallel)
-library(pheatmap)
-library(stats)
-library(dplyr)
-library(ClusterR)
-library(mclust)
+# library(ggfortify)
+# library(parallel)
+# library(pheatmap)
+# library(stats)
+# library(dplyr)
+# library(ClusterR)
+# library(mclust)
 
 # # develop and test
 # script_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
@@ -453,12 +453,12 @@ run_all <- function(args){
   #TODO add to params (full vector or just non normal probability) for now is null
   default_cn_rel_prob_vec <- NULL
   if(is.null(default_cn_rel_prob_vec)){
-    default_cn_rel_prob_vec <- c(1,2,200,2,1,0.5,2)
+    default_cn_rel_prob_vec <- c(1,2,500,2,1,0.5,2)
     default_cn_rel_prob_vec <- default_cn_rel_prob_vec / sum(default_cn_rel_prob_vec)
   }
   complex_FP_probability <- NULL
   if(is.null(complex_FP_probability)){
-    complex_FP_probability <- (1 - max(default_cn_rel_prob_vec)) / 4
+    complex_FP_probability <- (1 - max(default_cn_rel_prob_vec)) / 6
   }
 
   
@@ -530,10 +530,10 @@ run_all <- function(args){
   too_frequent_FP_CNVs_tab <-  final_cn_pred_info_table[too_frequent_FP_CNVs == T,]
   fwrite(too_frequent_FP_CNVs_tab,file = paste0(dirname(out_filename),"/too_frequent_filtered_CNVs.tsv"),sep="\t")
   final_cn_pred_info_table[too_frequent_FP_CNVs == T,cn_pred := "2"]
-  final_cn_pred_info_table[,too_frequent_FP_CNVs := T]
-  
+  final_cn_pred_info_table[,too_frequent_FP_CNVs := NULL]
   
   fwrite(final_cn_pred_info_table,file = out_filename,sep="\t")
+
   if(calling_type != "germline") {
     tumor_cell_fraction_table <- res[[2]][[iterations]]
     fwrite(tumor_cell_fraction_table,file = paste0(dirname(out_filename),"/tc_fraction_prediction.tsv"),sep="\t")
@@ -542,7 +542,7 @@ run_all <- function(args){
 }
 
 #run as Rscript
-# 
+#
 script_dir <- dirname(sub("--file=", "", commandArgs()[grep("--file=", commandArgs())]))
 args <- commandArgs(trailingOnly = T)
 print("start")

@@ -4,6 +4,11 @@
     "version": 1.0,
     "label":"Structural variant calling 3",
     "type":"var_call",
+    "run_parameters": {
+      "cpu": 31,
+      "memory": 65
+    },
+
     "inputs":[
       "mapped/{sample}.bam*"
     ],
