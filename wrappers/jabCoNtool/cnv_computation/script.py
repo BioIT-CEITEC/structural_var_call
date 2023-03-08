@@ -69,6 +69,9 @@ else:
                     + " cov " + " ".join(snakemake.input.sample_cov)\
                     + " 2>> " + log_filename
 
+f = open(log_filename + "_Rargs", 'w')
+f.write(" ".join(command.split(" ")[2:-3]) + "\")\n")
+f.close()
 
 f = open(log_filename, 'a+')
 f.write("## COMMAND: "+command+"\n")
