@@ -1,21 +1,19 @@
 library(data.table)
-# suppressMessages(library(stringi))
-# suppressMessages(library(zoo))
-# suppressPackageStartupMessages(library(proxy))
+library(proxy)
 library(fitdistrplus)
-# library(ggfortify)
-# library(parallel)
-# library(pheatmap)
-# library(stats)
-# library(dplyr)
-# library(ClusterR)
-# library(mclust)
+library(mclust)
+library(tictoc)
 
 # # develop and test
 # script_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 # setwd(paste0(script_dir,"/../../.."))
-# args <- readLines(con = "logs/all_samples/jabCoNtool/all_args.log")
+# args <- readLines(con = "logs/all_samples/jabCoNtool/cnv_computation.log_Rargs")
 # args <- strsplit(args,split = " ")[[1]]
+
+#run as Rscript
+#
+script_dir <- dirname(sub("--file=", "", commandArgs()[grep("--file=", commandArgs())]))
+
 
 source(paste0(script_dir,"/jabConTool_func_load_inputs.R"))
 source(paste0(script_dir,"/estimate_tumorload.R"))
@@ -121,8 +119,13 @@ compute_distribution_pramaters <- function(cov_tab,library_type = "panel"){
     cor_mat <- cor_mat / (1 - min_corelation_threshold)
     diag(cor_mat) <- 1
     
+    cor_sums_tab <- rowSums(cor_mat)
+    cor_sums_tab <- data.table(sample = names(cor_sums_tab),norm_weight = cor_sums_tab)
+    
     cov_tab[,norm_dist_mean := vector.weighted.mean(cov,cor_mat),by = "region_id"]
     cov_tab[,norm_dist_sd := vector.weighted.sd(cov,cor_mat),by = "region_id"]
+    cov_tab[is.na(norm_dist_sd),norm_dist_sd := 1]
+    cov_tab <- merge(cov_tab,cor_sums_tab,by = "sample")
     
   } else {
     normalization_sample_type <- tail(sort(unique(cov_tab$type)),1)
@@ -304,7 +307,7 @@ predict_CNV_model <- function(sample_tab,trans_mat_list,cov_tab,snp_tab,library_
 
   per_sample_res <- lapply(sample_tab[type == "call"]$sample,function(sel_sample){
     #sel_sample = sample_tab[type == "call"]$sample[1]
-    #sel_sample = "BR-1381"
+    #sel_sample = "BR-1470"
     print(paste0("sample: ",sel_sample))
     if(!is.null(snp_tab)){
       tictoc::tic()
@@ -543,7 +546,6 @@ run_all <- function(args){
 
 #run as Rscript
 #
-script_dir <- dirname(sub("--file=", "", commandArgs()[grep("--file=", commandArgs())]))
 args <- commandArgs(trailingOnly = T)
 print("start")
 timestamp()

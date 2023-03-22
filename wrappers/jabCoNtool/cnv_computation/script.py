@@ -43,7 +43,7 @@ else:
     library_type = "panel"
 
 if snakemake.params.calling_type == "tumor_normal":
-    command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/jabConTool_main.R" \
+    command = "Rscript " + os.path.abspath(os.path.dirname(__file__)) + "/jabConTool_main.R" \
                     + " " + snakemake.output.all_res_prob_tab \
                     + " " + snakemake.input.region_bed\
                     + " " + panel_snps_filename \
@@ -57,7 +57,7 @@ if snakemake.params.calling_type == "tumor_normal":
                     + " 2>> " + log_filename
 
 else:
-    command = "Rscript  " + os.path.abspath(os.path.dirname(__file__)) + "/jabConTool_main.R" \
+    command = "Rscript " + os.path.abspath(os.path.dirname(__file__)) + "/jabConTool_main.R" \
                     + " " + snakemake.output.all_res_prob_tab \
                     + " " + snakemake.input.region_bed\
                     + " " + panel_snps_filename \
@@ -70,7 +70,7 @@ else:
                     + " 2>> " + log_filename
 
 f = open(log_filename + "_Rargs", 'w')
-f.write(" ".join(command.split(" ")[2:-3]) + "\")\n")
+f.write(" ".join(command.split(" ")[2:-3]) + "\n")
 f.close()
 
 f = open(log_filename, 'a+')

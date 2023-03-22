@@ -147,7 +147,7 @@ load_and_prefilter_sample_data <- function(sample_tab,
       
       cov_tab <- merge(cov_tab,centromere_tab,by = "chr")
       cov_tab[,acen_dist := pmin(abs(acen_start - end),abs(acen_end - start))]
-      cov_tab <- cov_tab[acen_dist > (acen_length / 2)]
+      cov_tab <- cov_tab[acen_dist > (acen_length / 10)]
       cov_tab[,acen_start := NULL]
       cov_tab[,acen_end := NULL]
       cov_tab[,acen_dist := NULL]

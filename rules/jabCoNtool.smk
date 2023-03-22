@@ -58,7 +58,7 @@ def jabCoNtool_cnv_computation_inputs(wildcards):
         if config["jabCoNtool_normalize_to_GC"] == True:
             input_dict["GC_profile_file"] = expand("structural_varcalls/all_samples/GC_profile_{window_size}.cnp",window_size=config["wgs_bin_size"])[0]
         if config["jabCoNtool_remove_centromeres"] == True:
-            input_dict["cytoband_file"] = expand("{ref_dir}/other/cytoband/cytoband.tsv",ref_dir=reference_directory)[0]
+            input_dict["cytoband_file"] = expand("{ref_dir}/other/cytoband/{ref}.cytoband.tsv",ref_dir=reference_directory,ref = config["reference"])[0]
     else:
         input_dict["region_bed"] = expand("{ref_dir}/intervals/{lib_ROI}/{lib_ROI}.bed",ref_dir=reference_directory,lib_ROI=config["lib_ROI"])[0]
     if config["jabCoNtool_use_snps"] == True:
