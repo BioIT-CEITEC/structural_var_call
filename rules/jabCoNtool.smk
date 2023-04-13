@@ -72,6 +72,7 @@ rule jabCoNtool_cnv_computation:
     params: jabCoNtool_predict_TL = config["jabCoNtool_predict_TL"],
             calling_type = config["calling_type"],
             lib_ROI= config["lib_ROI"],
+            max_CNV_occurance_in_cohort = config["max_CNV_occurance_in_cohort"]
     log:    "logs/all_samples/jabCoNtool/cnv_computation.log",
     threads: workflow.cores
     conda:  "../wrappers/jabCoNtool/cnv_computation/env.yaml"

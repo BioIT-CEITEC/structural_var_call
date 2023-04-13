@@ -142,6 +142,8 @@ load_and_prefilter_sample_data <- function(sample_tab,
     
     if(cytoband_file != "no_cytoband"){
       centromere_tab <- fread(cytoband_file)
+
+      setnames(centromere_tab,c("chr","start","end",as.character(seq_len(ncol(centromere_tab) - 4)),"band_type"))
       centromere_tab <- centromere_tab[band_type == "acen",.(acen_start = min(start),acen_end = max(end)),by = chr]
       centromere_tab[,acen_length := acen_end - acen_start]
       

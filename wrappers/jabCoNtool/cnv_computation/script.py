@@ -43,6 +43,10 @@ else:
     library_type = "panel"
 
 if snakemake.params.calling_type == "tumor_normal":
+    norm_cov_sample_params = " norm_cov " + " ".join(snakemake.input.normal_sample_cov)
+else:
+    norm_cov_sample_params = ""
+
     command = "Rscript " + os.path.abspath(os.path.dirname(__file__)) + "/jabConTool_main.R" \
                     + " " + snakemake.output.all_res_prob_tab \
                     + " " + snakemake.input.region_bed\
@@ -52,22 +56,13 @@ if snakemake.params.calling_type == "tumor_normal":
                     + " " + GC_normalization_file \
                     + " " + cytoband_file \
                     + " " + str(snakemake.params.jabCoNtool_predict_TL) \
+                    + " " + str(snakemake.params.max_CNV_occurance_in_cohort) \
                     + " cov " + " ".join(snakemake.input.sample_cov)\
-                    + " norm_cov " + " ".join(snakemake.input.normal_sample_cov) \
+                    + norm_cov_sample_params \
                     + " 2>> " + log_filename
 
-else:
-    command = "Rscript " + os.path.abspath(os.path.dirname(__file__)) + "/jabConTool_main.R" \
-                    + " " + snakemake.output.all_res_prob_tab \
-                    + " " + snakemake.input.region_bed\
-                    + " " + panel_snps_filename \
-                    + " " + snakemake.params.calling_type \
-                    + " " + library_type \
-                    + " " + GC_normalization_file \
-                    + " " + cytoband_file \
-                    + " " + str(snakemake.params.jabCoNtool_predict_TL) \
-                    + " cov " + " ".join(snakemake.input.sample_cov)\
-                    + " 2>> " + log_filename
+
+
 
 f = open(log_filename + "_Rargs", 'w')
 f.write(" ".join(command.split(" ")[2:-3]) + "\n")

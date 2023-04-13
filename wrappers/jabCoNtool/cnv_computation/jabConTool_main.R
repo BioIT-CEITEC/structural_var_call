@@ -11,7 +11,6 @@ library(tictoc)
 # args <- strsplit(args,split = " ")[[1]]
 
 #run as Rscript
-#
 script_dir <- dirname(sub("--file=", "", commandArgs()[grep("--file=", commandArgs())]))
 
 
@@ -172,7 +171,7 @@ get_nbinom_negative_log_likelihoods <- function(cn_count,cov_tab){
   
   size <- mu^2 / (var - mu) 
   prob <- dnbinom(round(cov_tab$cov),mu = mu,size = size)
-  return(nloglike)
+  return(prob)
 }
 
 compute_coverage_based_nloglike <- function(cov_tab,library_type,cn_categories_tab,complex_FP_probability = 0.005){
@@ -342,11 +341,21 @@ predict_CNV_model <- function(sample_tab,trans_mat_list,cov_tab,snp_tab,library_
     names(cn_predict_tab) <- sample_tab[type == "call"]$sample
     cn_predict_tab <- rbindlist(cn_predict_tab,use.names = T,idcol = "sample")
     
-    cn_call_info_tab <- rbind(cov_nloglike_tab[,.(sample,region_id,cov,norm_dist_mean,norm_dist_sd,pos = NA,pop_HET_probability = NA,alt_count = NA,ref_count = NA)],
-                              snp_nloglike_tab[,.(sample,region_id,cov = NA,norm_dist_mean = NA,norm_dist_sd = NA,pos,pop_HET_probability,alt_count,ref_count)])
-    
-    cn_call_info_tab <- cbind(cn_call_info_tab,rbind(cov_nloglike_tab[,cn_categories_vec,with = F],snp_nloglike_tab[,cn_categories_vec,with = F]))
-    setorder(cn_call_info_tab,sample,region_id)
+    if(!is.null(snp_tab)){
+      if(library_type != "wgs"){
+        cn_call_info_tab <- rbind(cov_nloglike_tab[,.(sample,region_id,cov,norm_dist_mean,norm_dist_sd,pos = NA,pop_HET_probability = NA,alt_count = NA,ref_count = NA)],
+                                  snp_nloglike_tab[,.(sample,region_id,cov = NA,norm_dist_mean = NA,norm_dist_sd = NA,pos,pop_HET_probability,alt_count,ref_count)])
+      } else {
+        cn_call_info_tab <- rbind(cov_nloglike_tab[,.(sample,region_id,cov,nbinom_mean,nbinom_var,pos = NA,pop_HET_probability = NA,alt_count = NA,ref_count = NA)],
+                                  snp_nloglike_tab[,.(sample,region_id,cov = NA,norm_dist_mean = NA,norm_dist_sd = NA,pos,pop_HET_probability,alt_count,ref_count)])
+      }
+      
+      cn_call_info_tab <- cbind(cn_call_info_tab,rbind(cov_nloglike_tab[,cn_categories_vec,with = F],snp_nloglike_tab[,cn_categories_vec,with = F]))
+      setorder(cn_call_info_tab,sample,region_id)
+    } else {
+      cov_nloglike_tab[,c("chr","start","end") := NULL]
+      cn_call_info_tab <- cov_nloglike_tab
+    }
     
     return(list(model_estimate_tab,cn_predict_tab,cn_call_info_tab))
   }
@@ -390,7 +399,7 @@ predict_CNVs <- function(sample_tab,cov_tab,snp_tab,library_type,trans_mat_list,
   }
  
   
-  for(i in seq_along(vector(length = iterations))){
+  for(i in seq_len(iterations)){
     # i <-1
     tictoc::tic()
     print(paste0("iter: ",i))
@@ -405,7 +414,7 @@ predict_CNVs <- function(sample_tab,cov_tab,snp_tab,library_type,trans_mat_list,
     final_estimates <- res[[2]]
     cn_call_info_tab <- res[[3]]
     
-    final_estimates <- merge.data.table(cov_tab[,.(sample,region_id,chr,start,end)],final_estimates,by = c("sample","region_id"))
+    final_estimates <- merge.data.table(cov_tab[,.(sample,region_id,chr,start,end,cov)],final_estimates,by = c("sample","region_id"))
     
     rle_res <- final_estimates[,rle(cn_pred),by = .(sample,chr)]
     rle_res[,cn_id := seq_along(values),by = .(sample,chr)]
@@ -417,7 +426,8 @@ predict_CNVs <- function(sample_tab,cov_tab,snp_tab,library_type,trans_mat_list,
       TL_estimates_tab_list[[i + 1]][is.na(CNV_size_Mbp),CNV_size_Mbp := 0]
       TL_estimates_tab_list[[i + 1]][is.na(rel_CNV_size),rel_CNV_size := 0]
     }
-
+    
+    final_estimates[,cov := NULL]
     final_estimates <- merge.data.table(final_estimates,cn_call_info_tab,by = c("sample","region_id"))
     CNV_pred_list[[i]] <- final_estimates
     
@@ -448,7 +458,7 @@ run_all <- function(args){
   GC_normalization_file <- args[6] #filename or "no_GC_norm"
   cytoband_file <- args[7] #filename or "no_cytoband"
   prior_est_tumor_ratio <- as.logical(args[8])
-  max_CNV_frequency <- 0.03
+  max_CNV_frequency_in_cohort <- as.numeric(args[9])
   cov_tab_filenames <- args[(which(args == "cov") + 1):length(args)] 
   
   
@@ -530,7 +540,7 @@ run_all <- function(args){
   #remove and store too frequent CNVs in the cohort 
   final_cn_pred_info_table[,CNV_in_cohort := length(unique(sample)),by = .(cn_pred,region_id)]
   final_cn_pred_info_table[,too_frequent_FP_CNVs := cn_pred != "2" & CNV_in_cohort / length(unique(sample)) > max_CNV_frequency ]
-  too_frequent_FP_CNVs_tab <-  final_cn_pred_info_table[too_frequent_FP_CNVs == T,]
+  too_frequent_FP_CNVs_tab <- final_cn_pred_info_table[too_frequent_FP_CNVs == T,]
   fwrite(too_frequent_FP_CNVs_tab,file = paste0(dirname(out_filename),"/too_frequent_filtered_CNVs.tsv"),sep="\t")
   final_cn_pred_info_table[too_frequent_FP_CNVs == T,cn_pred := "2"]
   final_cn_pred_info_table[,too_frequent_FP_CNVs := NULL]

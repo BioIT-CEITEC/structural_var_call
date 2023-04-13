@@ -97,6 +97,11 @@
         "type": "bool",
         "default": true
       },
+      "max_CNV_occurance_in_cohort": {
+        "label": "Maximal occurance of CNV in cohort for it not to be filtered. As ratio of cohort size in percent.",
+        "type": "int",
+        "default": 100
+      },
       "use_control_freec": {
         "label": "Use Control-FREEC for variant calling.",
         "type": "bool",
