@@ -129,7 +129,7 @@ load_and_prefilter_sample_data <- function(sample_tab,
                                            library_type,
                                            GC_normalization_file,
                                            cytoband_file,
-                                           outlier_probability = 0.05,
+                                           outlier_probability = 0,
                                            wgs_outlier_filter_iter = 2,
                                            usable_bases_ratio_threshold = 0.85){
   
@@ -144,32 +144,35 @@ load_and_prefilter_sample_data <- function(sample_tab,
       centromere_tab <- fread(cytoband_file)
 
       setnames(centromere_tab,c("chr","start","end",as.character(seq_len(ncol(centromere_tab) - 4)),"band_type"))
-      centromere_tab <- centromere_tab[band_type == "acen",.(acen_start = min(start),acen_end = max(end)),by = chr]
-      centromere_tab[,acen_length := acen_end - acen_start]
+      centromere_tab <- centromere_tab[band_type == "acen",.(start = min(start),end = max(end)),by = chr]
+      centromere_tab[,acen_length := end - start]
+      #set removed netromere area as centromere +/- 10% - #TODO set as parameter 
+      centromere_tab[,start := start - (acen_length / 10)]
+      centromere_tab[,end := end + (acen_length / 10)]
+      setkey(centromere_tab,chr,start,end)
       
-      cov_tab <- merge(cov_tab,centromere_tab,by = "chr")
-      cov_tab[,acen_dist := pmin(abs(acen_start - end),abs(acen_end - start))]
-      cov_tab <- cov_tab[acen_dist > (acen_length / 10)]
-      cov_tab[,acen_start := NULL]
-      cov_tab[,acen_end := NULL]
-      cov_tab[,acen_dist := NULL]
-      cov_tab[,acen_length := NULL]
+      cov_tab <- foverlaps(cov_tab,centromere_tab)
+      cov_tab <- cov_tab[is.na(acen_length)]
+      cov_tab[,c("start","end","acen_length") := NULL]
+      setnames(cov_tab,c("i.start","i.end"),c("start","end"))
     }
     
-    
-    #test join cov_tab
-    cov_tab[,median_cov := median(cov),by = region_id]
-    cov_tab[,outlier_region := F]
-    for(i in seq(1,by = 1,length.out = wgs_outlier_filter_iter)){
-      norm_cov_tab <- cov_tab[sample %in% sample_tab[type == normalization_sample_type]$sample]
-      norm_nbinom_dist <- fitdist(as.integer(norm_cov_tab[outlier_region == F]$cov),distr = "nbinom") 
-      outlier_low_value <- qnbinom(outlier_probability,size = norm_nbinom_dist$estimate["size"],mu = norm_nbinom_dist$estimate["mu"])
-      outlier_high_value <- qnbinom(1 - outlier_probability,size = norm_nbinom_dist$estimate["size"],mu = norm_nbinom_dist$estimate["mu"])
-      cov_tab[!(median_cov > outlier_low_value & median_cov < outlier_high_value),outlier_region := T]
+    if(outlier_probability > 0){
+      #test join cov_tab
+      cov_tab[,median_cov := median(cov),by = region_id]
+      cov_tab[,outlier_region := F]
+      for(i in seq(1,by = 1,length.out = wgs_outlier_filter_iter)){
+        norm_cov_tab <- cov_tab[sample %in% sample_tab[type == normalization_sample_type]$sample]
+        norm_nbinom_dist <- fitdist(as.integer(norm_cov_tab[outlier_region == F]$cov),distr = "nbinom") 
+        outlier_low_value <- qnbinom(outlier_probability,size = norm_nbinom_dist$estimate["size"],mu = norm_nbinom_dist$estimate["mu"])
+        outlier_high_value <- qnbinom(1 - outlier_probability,size = norm_nbinom_dist$estimate["size"],mu = norm_nbinom_dist$estimate["mu"])
+        cov_tab[!(median_cov > outlier_low_value & median_cov < outlier_high_value),outlier_region := T]
+      }
+      cov_tab <- cov_tab[outlier_region == F]
+      cov_tab[,median_cov :=NULL]
+      cov_tab[,outlier_region :=NULL]
     }
-    cov_tab <- cov_tab[outlier_region == F]
-    cov_tab[,median_cov :=NULL]
-    cov_tab[,outlier_region :=NULL]
+
     
   }
   

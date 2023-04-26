@@ -5,7 +5,7 @@ library(mclust)
 estimate_tumor_ratio_from_hist_one_sample <- function(sample_cov_tab,TL_vec,values_to_consider){
   densityMclust_res <- densityMclust(sample_cov_tab$cov,plot = F)
   
-  hist <- hist(sample_cov_tab[cov < mean(cov) * 2]$cov,200,plot = F)
+  hist <- hist(sample_cov_tab[cov < mean(cov) * 2 & cov > mean(cov) / 2]$cov,200,plot = F)
   normal_cov <- hist$mids[which.max(hist$counts)]
   TL_mat <- sapply(TL_vec,function(TL) TL * ((1:3)/2 * normal_cov) + normal_cov * (1 - TL))
   
