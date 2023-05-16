@@ -93,8 +93,9 @@ def create_cohort_data_inputs(wildcards):
 
 rule create_cohort_data:
     input:  unpack(create_cohort_data_inputs)
-    output: "cohort_data/cohort_data_updated"
-    # conda:  "../wrappers/process_and_format_annot_variants/env.yaml"
+    output: update_finished_checkfile = "cohort_data/cohort_data_updated"
+    log: "logs/postprocess_and_format_annot_variants.log"
+    conda:  "../wrappers/create_cohort_data/env.yaml"
     script: "../wrappers/create_cohort_data/script.py"
 
 # vcf_cnvkit = lambda wildcards: expand("cnv_sv/cnvkit_vcf/{sample_name}.vcf",sample_name=sample_tab.sample_name),
