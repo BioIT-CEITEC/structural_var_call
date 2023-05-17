@@ -14,7 +14,7 @@
     ],
     "outputs":[
       "structural_varcalls/*",
-      "final_SV_calls/*",
+      "final_CNV_table.tsv",
       "reports/final_report.html"
     ],
     "inputs_optional":[
