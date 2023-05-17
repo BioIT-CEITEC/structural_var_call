@@ -1,13 +1,18 @@
-def process_and_format_annot_variants_inputs(wildcards):
+def process_and_format_CNV_inputs(wildcards):
+    if config["calling_type"] == "tumor_normal":
+        sample_name_list=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()
+    else:
+        sample_name_list=sample_tab.sample_name
+
     input_dict = {}
     if config["use_gatk_cnv"]:
-        input_dict["gatk_cnv_variants"] = expand("structural_varcalls/{sample_name}/gatk_cnv/CNV_varcalls.vcf",sample_name = wildcards.sample_name)[0]
+        input_dict["gatk_cnv_variants"] = expand("structural_varcalls/{sample_name}/gatk_cnv/CNV_varcalls.vcf",sample_name = sample_name_list)
     if config["use_cnvkit"]:
-        input_dict["cnvkit_variants"] = expand("structural_varcalls/{sample_name}/cnvkit/CNV_calls.cns",sample_name = wildcards.sample_name)[0]
+        input_dict["cnvkit_variants"] = expand("structural_varcalls/{sample_name}/cnvkit/CNV_calls.cns",sample_name = sample_name_list)
     if config["use_jabCoNtool"]:
         input_dict["jabCoNtool_variants"] = "structural_varcalls/all_samples/jabCoNtool/final_CNV_probs.tsv"
     if config["use_control_freec"]:
-        input_dict["control_freec_variants"] = expand("structural_varcalls/{sample_name}/control_freec/CNV_varcalls.tsv",sample_name = wildcards.sample_name)[0]
+        input_dict["control_freec_variants"] = expand("structural_varcalls/{sample_name}/control_freec/CNV_varcalls.tsv",sample_name = sample_name_list)
     if config["lib_ROI"] == "wgs":
         input_dict["region_bed"] = expand("structural_varcalls/all_samples/binned_genome_{window_size}.bed",window_size=config["wgs_bin_size"])[0]
     else:
@@ -15,64 +20,31 @@ def process_and_format_annot_variants_inputs(wildcards):
 
     return input_dict
 
-rule merge_CNV_variants:
+rule process_and_format_CNV:
     input:
-        unpack(process_and_format_annot_variants_inputs)
+        unpack(process_and_format_CNV_inputs)
     output:
-        merged="structural_varcalls/{sample_name}/CNVs.merged.tsv",
+        all_vars_tsv= "final_CNV_table.tsv",
     params:
         overlap=0.6, #config.get("svdb_merge", {}).get("overlap", 0.6),
     log:
-        "logs/merge_CNV_variants/{sample_name}.log",
+        "logs/process_and_format_CNV/{sample_name}.log",
     threads: 8
-    conda:  "../wrappers/merge_CNVs/env.yaml"
-    script: "../wrappers/merge_CNVs/script.py"
-
-rule annot_CNV_variants:
-    input:
-        "structural_varcalls/{sample_name}/CNVs.merged.tsv",
-    output:
-        vcf="structural_varcalls/{sample_name}.CNV.final_variants.tsv"
+    # conda:  "../wrappers/process_and_format_CNV/env.yaml"
+    # script: "../wrappers/process_and_format_CNV/script.py"
     shell:
-        "cp {input} {output}"
+        "touch {output.all_vars_tsv}"
 
 
-def process_and_format_annot_variants_inputs(wildcards):
-    varcall_type = []
-    if len(used_CNV_callers) > 0:
-        varcall_type.append("CNV")
-    if len(used_SV_callers) > 0:
-        varcall_type.append("SV")
-
-    if config["calling_type"] == "tumor_normal":
-        sample_name_list=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()
-    else:
-        sample_name_list=sample_tab.sample_name
-
-    return expand("structural_varcalls/{sample_name}.{varcall_type}.final_variants.tsv",varcall_type = varcall_type,sample_name=sample_name_list)
-
-
-rule process_and_format_annot_variants:
-    input:  var_tabs = process_and_format_annot_variants_inputs,
-    output: all_vars_tsv = "final_variant_table.tsv",
-    log:    "logs/postprocess_and_format_annot_variants.log"
-    threads: 1
-    resources:
-        mem_mb=8000
-    # params: reference = config["reference"],
-    #         min_variant_frequency = str(config["min_variant_frequency"]),
-    #         format = config["format"],
-    #         anno_gtf = expand("{ref_dir}/annot/{ref_name}.gtf",ref_dir = reference_directory,ref_name = config["reference"]),
-    #         create_cohort_data = config["create_cohort_data"],
-    #         batch_name = config["entity_name"],
-    #         ref_dir= reference_directory,
-    #         organism=config["organism"],
-    #         mut_load_output_filename= "mutation_loads.xlsx",
-    # conda:  "../wrappers/process_and_format_annot_variants/env.yaml"
-    # script: "../wrappers/process_and_format_annot_variants/script.py"
+rule final_alignment_report:
+    input:  all_vars_tsv= "final_CNV_table.tsv",
+    output: html = "reports/final_SV_report.html"
+    # params: sample_name = sample_tab.sample_name,
+    #         config = "./config.json"
+    # conda: "../wrappers/final_alignment_report/env.yaml"
+    # script: "../wrappers/final_alignment_report/script.Rmd"
     shell:
-        "touch {output}"
-
+        "mkdir reports; touch {output.html}"
 
 def create_cohort_data_inputs(wildcards):
     input_dict = {}
@@ -123,5 +95,43 @@ rule create_cohort_data:
 # rule final_report:
 #     input:  unpack(final_report_inputs)
 #     output: "report/final_report.html"
+#     shell:
+#         "touch {output}"
+
+
+
+# def process_and_format_annot_variants_inputs(wildcards):
+#     varcall_type = []
+#     if len(used_CNV_callers) > 0:
+#         varcall_type.append("CNV")
+#     if len(used_SV_callers) > 0:
+#         varcall_type.append("SV")
+#
+#     if config["calling_type"] == "tumor_normal":
+#         sample_name_list=sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()
+#     else:
+#         sample_name_list=sample_tab.sample_name
+#
+#     return expand("structural_varcalls/{sample_name}.{varcall_type}.final_variants.tsv",varcall_type = varcall_type,sample_name=sample_name_list)
+#
+#
+# rule process_and_format_annot_variants:
+#     input:  var_tabs = process_and_format_annot_variants_inputs,
+#     output: all_vars_tsv = "final_variant_table.tsv",
+#     log:    "logs/postprocess_and_format_annot_variants.log"
+#     threads: 1
+#     resources:
+#         mem_mb=8000
+#     # params: reference = config["reference"],
+#     #         min_variant_frequency = str(config["min_variant_frequency"]),
+#     #         format = config["format"],
+#     #         anno_gtf = expand("{ref_dir}/annot/{ref_name}.gtf",ref_dir = reference_directory,ref_name = config["reference"]),
+#     #         create_cohort_data = config["create_cohort_data"],
+#     #         batch_name = config["entity_name"],
+#     #         ref_dir= reference_directory,
+#     #         organism=config["organism"],
+#     #         mut_load_output_filename= "mutation_loads.xlsx",
+#     # conda:  "../wrappers/process_and_format_annot_variants/env.yaml"
+#     # script: "../wrappers/process_and_format_annot_variants/script.py"
 #     shell:
 #         "touch {output}"

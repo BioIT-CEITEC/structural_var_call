@@ -69,7 +69,7 @@ include: "rules/common_prep.smk"
 # RULE ALL
 def all_inputs(wildcards):
     input_dict = {}
-    input_dict["final_report"] = "final_variant_table.tsv",
+    input_dict["final_report"] = "reports/final_SV_report.html",
     if config["create_cohort_data"] == True:
         input_dict["cohort_data_update_tag"] = "cohort_data/cohort_data_updated"
     return input_dict
