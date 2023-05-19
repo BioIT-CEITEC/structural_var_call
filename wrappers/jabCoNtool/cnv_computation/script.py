@@ -23,8 +23,8 @@ shell.executable("/bin/bash")
 #     normal_snp_AF_files = ""
 
 
-if hasattr(snakemake.input, "previous_cohort_data"):
-    previous_cohort_data = snakemake.input.previous_cohort_data
+if hasattr(snakemake.input, "cohort_data"):
+    previous_cohort_data = snakemake.input.cohort_data
 else:
     previous_cohort_data = "no_previous_cohort_data"
 
