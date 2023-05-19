@@ -22,6 +22,12 @@ shell.executable("/bin/bash")
 #     snp_AF_files = ""
 #     normal_snp_AF_files = ""
 
+
+if hasattr(snakemake.input, "previous_cohort_data"):
+    previous_cohort_data = snakemake.input.previous_cohort_data
+else:
+    previous_cohort_data = "no_previous_cohort_data"
+
 if hasattr(snakemake.input, "snp_bed"):
     panel_snps_filename = snakemake.input.snp_bed
 else:
@@ -55,6 +61,7 @@ else:
                     + " " + library_type \
                     + " " + GC_normalization_file \
                     + " " + cytoband_file \
+                    + " " + previous_cohort_data \
                     + " " + str(snakemake.params.jabCoNtool_predict_TL) \
                     + " " + str(snakemake.params.max_CNV_occurance_in_cohort) \
                     + " cov " + " ".join(snakemake.input.sample_cov)\

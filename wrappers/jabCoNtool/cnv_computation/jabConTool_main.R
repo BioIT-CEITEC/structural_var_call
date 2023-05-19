@@ -474,8 +474,9 @@ run_all <- function(args){
   library_type <- args[5] #wgs, panel
   GC_normalization_file <- args[6] #filename or "no_GC_norm"
   cytoband_file <- args[7] #filename or "no_cytoband"
-  prior_est_tumor_ratio <- as.logical(args[8])
-  max_CNV_frequency_in_cohort <- as.numeric(args[9]) / 100
+  cohort_data_filename <- args[8]
+  prior_est_tumor_ratio <- as.logical(args[9])
+  max_CNV_frequency_in_cohort <- as.numeric(args[10]) / 100
   cov_tab_filenames <- args[(which(args == "cov") + 1):length(args)] 
   
   

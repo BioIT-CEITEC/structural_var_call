@@ -19,3 +19,8 @@ rule get_binned_gc_content:
     params: window_size=config["wgs_bin_size"]
     conda:  "../wrappers/common_prep/get_binned_gc_content/env.yaml"
     script: "../wrappers/common_prep/get_binned_gc_content/script.py"
+
+rule unzip_cohort_data:
+    input:  cohort_gz = "cohort_data/cohort_cnv_info.tar.gz"
+    output: jabContooldata = "cohort_data/cohort_data/jabCoNtool/region_info.tsv",
+    shell:  "tar -xzf {input.cohort_gz}"
