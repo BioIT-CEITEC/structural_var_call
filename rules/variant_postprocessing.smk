@@ -28,7 +28,7 @@ rule process_and_format_CNV:
     params:
         overlap=0.6, #config.get("svdb_merge", {}).get("overlap", 0.6),
     log:
-        "logs/process_and_format_CNV/{sample_name}.log",
+        "logs/process_and_format_CNV.log",
     threads: 8
     # conda:  "../wrappers/process_and_format_CNV/env.yaml"
     # script: "../wrappers/process_and_format_CNV/script.py"
@@ -44,7 +44,7 @@ rule final_alignment_report:
     # conda: "../wrappers/final_alignment_report/env.yaml"
     # script: "../wrappers/final_alignment_report/script.Rmd"
     shell:
-        "mkdir reports; touch {output.html}"
+        "mkdir -p reports; touch {output.html}"
 
 def create_cohort_data_inputs(wildcards):
     input_dict = {}
