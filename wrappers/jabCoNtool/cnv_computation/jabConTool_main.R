@@ -474,11 +474,12 @@ run_all <- function(args){
   library_type <- args[5] #wgs, panel
   GC_normalization_file <- args[6] #filename or "no_GC_norm"
   cytoband_file <- args[7] #filename or "no_cytoband"
-  cohort_data_filename <- args[8]
+  cohort_data_filename <- args[8] #filename or "no_previous_cohort_data"
   prior_est_tumor_ratio <- as.logical(args[9])
   max_CNV_frequency_in_cohort <- as.numeric(args[10]) / 100
   cov_tab_filenames <- args[(which(args == "cov") + 1):length(args)] 
   
+  dir.create(dirname(out_filename),recursive = T,showWarnings = F)
   
   #set defuault copy number and error probability if not set in params
   #TODO add to params (full vector or just non normal probability) for now is null
@@ -546,6 +547,40 @@ run_all <- function(args){
     iterations = 3
   }
   
+  if(cohort_data_filename != "no_previous_cohort_data"){
+
+    cohort_tab <- fread(cohort_data_filename)
+    cohort_tab[,chr := as.character(chr)]
+    cohort_tab <- cohort_tab[!(sample %in% sample_tab$sample)]
+
+    #combine sample tab
+    cohort_sample_tab <- data.table(sample = unique(cohort_tab$sample),type = "cohort")
+    sample_tab <- rbind(sample_tab,cohort_sample_tab)
+    
+    # combine coverage tab
+    region_tab <- unique(cov_tab,by = c("region_id","chr","start","end"))
+    region_tab[,c("sample","cov_raw","cov") := NULL]
+    cohort_cov_tab <- cohort_tab[!is.na(cov)]
+    cohort_cov_tab[,c("pos","alt_count","ref_count") := NULL]
+    cohort_cov_tab <- merge.data.table(cohort_cov_tab,region_tab,by = c("chr","start","end"))
+    cohort_cov_tab[,cov_raw := NA]
+    setcolorder(cohort_cov_tab,names(cov_tab))
+    cov_tab <- rbind(cov_tab,cohort_cov_tab)
+    
+    # if(!is.null(snp_tab)){
+    #   # combine snp tab
+    #   region_tab <- unique(snp_tab,by = c("region_id","pos"))
+    #   region_tab[,c("sample","alt_count","ref_count") := NULL]
+    #   cohort_snp_tab <- cohort_tab[!is.na(pos)]
+    #   cohort_snp_tab[,c("cov","start","end") := NULL]
+    #   cohort_snp_tab <- merge.data.table(cohort_snp_tab,region_tab,by = c("chr","pos"))
+    #   setcolorder(cohort_snp_tab,names(snp_tab))
+    #   snp_tab <- rbind(snp_tab,cohort_snp_tab)
+    # }
+
+      
+  }
+  
   
   res <- predict_CNVs(sample_tab,cov_tab,snp_tab,library_type,trans_mat_list,categories_default_tabs,initial_TL,iterations,complex_FP_probability)
   
@@ -564,6 +599,13 @@ run_all <- function(args){
   final_cn_pred_info_table[,too_frequent_FP_CNVs := NULL]
   
   fwrite(final_cn_pred_info_table,file = out_filename,sep="\t")
+  
+  if(cohort_data_filename != "no_previous_cohort_data"){
+    calling_info_tab <- rbind(cohort_tab,final_cn_pred_info_table[,names(cohort_tab),with = F])
+  } else {
+    calling_info_tab <- final_cn_pred_info_table[,intersect(names(final_cn_pred_info_table),c("sample","chr","start","end","cov","pos","alt_count","ref_count")),with = F]
+  }
+  fwrite(calling_info_tab,file = paste0(dirname(out_filename),"/cohort_info_tab.tsv"),sep="\t")
 
   if(calling_type != "germline") {
     tumor_cell_fraction_table <- res[[2]][[iterations]]
@@ -577,7 +619,7 @@ run_all <- function(args){
 args <- commandArgs(trailingOnly = T)
 print("start")
 timestamp()
-# run_all(args)
+run_all(args)
 print("end")
 timestamp()
 

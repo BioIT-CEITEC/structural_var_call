@@ -44,14 +44,14 @@ if hasattr(snakemake.input, "cnvkit_normal_coverage_inputs"):
     f.close()
 
 
-if hasattr(snakemake.input, "jabCoNtool_all_res_prob_tab"):
+if hasattr(snakemake.input, "jabCoNtool_cohort_info"):
     command = "mkdir -p cohort_data/cohort_data/jabCoNtool "
     f = open(log_filename, 'at')
     f.write("## COMMAND: " + command + "\n")
     f.close()
     shell(command)
 
-    command = 'awk -F"\\t" \'{{print $1 "\\t" $3 "\\t" $4 "\\t" $5 "\\t" $8 "\\t" $11 "\\t" $13 "\\t" $14}}\' ' + snakemake.input.jabCoNtool_all_res_prob_tab + " > cohort_data/cohort_data/jabCoNtool/region_info.tsv"
+    command = "cp " + snakemake.input.jabCoNtool_cohort_info + " cohort_data/cohort_data/jabCoNtool/cohort_info_tab.tsv"
     f = open(log_filename, 'at')
     f.write("## COMMAND: " + command + "\n")
     f.close()

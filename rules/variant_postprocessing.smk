@@ -24,20 +24,20 @@ rule process_and_format_CNV:
     input:
         unpack(process_and_format_CNV_inputs)
     output:
-        all_vars_tsv= "final_CNV_table.tsv",
+        all_vars_tsv= "final_CNV_results/CNV_variants.tsv",
     params:
-        overlap=0.6, #config.get("svdb_merge", {}).get("overlap", 0.6),
+        lib_ROI = config["lib_ROI"],
+        overlap = 0.6
     log:
         "logs/process_and_format_CNV.log",
     threads: 8
-    # conda:  "../wrappers/process_and_format_CNV/env.yaml"
-    # script: "../wrappers/process_and_format_CNV/script.py"
-    shell:
-        "touch {output.all_vars_tsv}"
+    conda:  "../wrappers/process_and_format_CNV/env.yaml"
+    script: "../wrappers/process_and_format_CNV/script.py"
+
 
 
 rule final_alignment_report:
-    input:  all_vars_tsv= "final_CNV_table.tsv",
+    input:  all_vars_tsv= "final_CNV_results/CNV_variants.tsv",
     output: html = "reports/final_SV_report.html"
     # params: sample_name = sample_tab.sample_name,
     #         config = "./config.json"
@@ -56,7 +56,7 @@ def create_cohort_data_inputs(wildcards):
                 input_dict["cnvkit_normal_coverage_inputs"] = set(expand("structural_varcalls/{sample_name}/cnvkit/tumor.{tag}targetcoverage.cnn",sample_name=sample_tab.sample_name.tolist(),tag=["", "anti"]))
 
     if config["use_jabCoNtool"]:
-        input_dict["jabCoNtool_all_res_prob_tab"] = "structural_varcalls/all_samples/jabCoNtool/final_CNV_probs.tsv"
+        input_dict["jabCoNtool_cohort_info"] = "structural_varcalls/all_samples/jabCoNtool/cohort_info_tab.tsv"
 
     if config["use_cohort_data"]:
         input_dict["previous_cohort_data"] = "cohort_data/cohort_cnv_info.tar.gz"
@@ -66,7 +66,7 @@ def create_cohort_data_inputs(wildcards):
 rule create_cohort_data:
     input:  unpack(create_cohort_data_inputs)
     output: update_finished_checkfile = "cohort_data/cohort_data_updated"
-    log: "logs/postprocess_and_format_annot_variants.log"
+    log: "logs/create_cohort_data.log"
     conda:  "../wrappers/create_cohort_data/env.yaml"
     script: "../wrappers/create_cohort_data/script.py"
 

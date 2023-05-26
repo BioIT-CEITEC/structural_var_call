@@ -52,7 +52,7 @@ def jabCoNtool_cnv_computation_inputs(wildcards):
         if config["jabCoNtool_use_snps"] == True:
             input_dict["snp_AF"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/sample.snpAF.tsv",sample_name=sample_tab.sample_name.tolist()))
     if config["use_cohort_data"] == True:
-        input_dict["cohort_data"] = "cohort_data/cohort_data/jabCoNtool/region_info.tsv"
+        input_dict["cohort_data"] = "cohort_data/cohort_data/jabCoNtool/cohort_info_tab.tsv"
     if config["lib_ROI"] == "wgs":
         input_dict["region_bed"] = expand("structural_varcalls/all_samples/binned_genome_{window_size}.bed",window_size=config["wgs_bin_size"])[0]
         if config["jabCoNtool_normalize_to_GC"] == True:

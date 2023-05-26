@@ -66,9 +66,7 @@ else:
                     + " " + str(snakemake.params.max_CNV_occurance_in_cohort) \
                     + " cov " + " ".join(snakemake.input.sample_cov)\
                     + norm_cov_sample_params \
-                    + " 2>> " + log_filename
-
-
+                    + " >> " + log_filename + " 2>&1"
 
 
 f = open(log_filename + "_Rargs", 'w')

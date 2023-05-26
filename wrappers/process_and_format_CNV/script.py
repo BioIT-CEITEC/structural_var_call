@@ -13,41 +13,52 @@ f.close()
 
 shell.executable("/bin/bash")
 
-CNV_caller_list = []
 CNV_call_file_list = []
 
 if hasattr(snakemake.input, "gatk_cnv_variants"):
-    CNV_caller_list.append("gatk_cnv")
-    CNV_call_file_list.append(snakemake.input.gatk_cnv_variants)
+    CNV_call_file_list.append("gatk_cnv")
+    CNV_call_file_list.extend(snakemake.input.gatk_cnv_variants)
+    CNV_call_file_list.append("gatk_cnv_end")
 
 if hasattr(snakemake.input, "cnvkit_variants"):
-    CNV_caller_list.append("cnvkit")
-    CNV_call_file_list.append(snakemake.input.cnvkit_variants)
+    CNV_call_file_list.append("cnvkit")
+    CNV_call_file_list.extend(snakemake.input.cnvkit_variants)
+    CNV_call_file_list.append("cnvkit_end")
 
 if hasattr(snakemake.input, "jabCoNtool_variants"):
-    CNV_caller_list.append("jabCoNtool")
+    CNV_call_file_list.append("jabCoNtool")
     CNV_call_file_list.append(snakemake.input.jabCoNtool_variants)
+    CNV_call_file_list.append("jabCoNtool_end")
 
 if hasattr(snakemake.input, "control_freec_variants"):
-    CNV_caller_list.append("control_freec")
-    CNV_call_file_list.append(snakemake.input.control_freec_variants)
+    CNV_call_file_list.append("control_freec")
+    CNV_call_file_list.extend(snakemake.input.control_freec_variants)
+    CNV_call_file_list.append("control_freec_end")
 
-if len(CNV_caller_list) > 0:
-    command = "Rscript "+os.path.abspath(os.path.dirname(__file__))+"/process_after_merge.R" \
-              + " " + snakemake.output.merged \
+if snakemake.params.lib_ROI == "wgs":
+    library_type = "wgs"
+else:
+    library_type = "panel"
+
+if len(CNV_call_file_list) > 0:
+    command = "Rscript "+os.path.abspath(os.path.dirname(__file__))+"/process_and_format_CNV.R" \
+              + " " + snakemake.output.all_vars_tsv \
               + " " + str(snakemake.params.overlap) \
-              + " " + str(snakemake.wildcards.sample_name) \
               + " " + str(snakemake.input.region_bed) \
-              + " callers " + " ".join(CNV_caller_list) \
-              + " CNV_files " + " ".join(CNV_call_file_list) \
+              + " " + library_type \
+              + " " + " ".join(CNV_call_file_list) \
               + " >> " + log_filename + " 2>&1"
+
+    f = open(log_filename + "_Rargs", 'w')
+    f.write(" ".join(command.split(" ")[2:-3]) + "\n")
+    f.close()
 
     f = open(log_filename, 'at')
     f.write("## COMMAND: " + command + "\n")
     f.write("## args <- c(\"" + "\",\"".join(command.split(" ")[2:-3]) + "\")\n")
     f.close()
 
-    shell(command)
+    # shell(command)
 else:
     print >> sys.stderr, "No callers set for a sample."
     sys.exit(1)
