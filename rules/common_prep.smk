@@ -23,4 +23,4 @@ rule get_binned_gc_content:
 rule unzip_cohort_data:
     input:  cohort_gz = "cohort_data/cohort_cnv_info.tar.gz"
     output: jabContooldata = "cohort_data/cohort_data/jabCoNtool/cohort_info_tab.tsv",
-    shell:  "tar -xzf {input.cohort_gz}"
+    shell:  "cd cohort_data/; tar -xzf ../{input.cohort_gz}; cd ../"
