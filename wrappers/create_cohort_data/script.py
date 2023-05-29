@@ -57,7 +57,7 @@ if hasattr(snakemake.input, "jabCoNtool_cohort_info"):
     f.close()
     shell(command)
 
-command = "tar -czvf cohort_data/cohort_cnv_info.tar.gz cohort_data/cohort_data"
+command = "cd cohort_data/ & tar -czvf cohort_cnv_info.tar.gz cohort_data >> ../" + log_filename + " 2>&1 & cd ../ "
 f = open(log_filename, 'at')
 f.write("## COMMAND: " + command + "\n")
 f.close()
@@ -68,7 +68,3 @@ f = open(log_filename, 'at')
 f.write("## COMMAND: " + command + "\n")
 f.close()
 shell(command)
-
-
-
-

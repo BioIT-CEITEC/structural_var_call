@@ -58,7 +58,7 @@ if len(CNV_call_file_list) > 0:
     f.write("## args <- c(\"" + "\",\"".join(command.split(" ")[2:-3]) + "\")\n")
     f.close()
 
-    # shell(command)
+    shell(command)
 else:
     print >> sys.stderr, "No callers set for a sample."
     sys.exit(1)

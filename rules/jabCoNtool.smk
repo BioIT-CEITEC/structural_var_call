@@ -68,7 +68,8 @@ def jabCoNtool_cnv_computation_inputs(wildcards):
 
 rule jabCoNtool_cnv_computation:
     input: unpack(jabCoNtool_cnv_computation_inputs)
-    output: all_res_prob_tab="structural_varcalls/all_samples/jabCoNtool/final_CNV_probs.tsv"
+    output: all_res_prob_tab="structural_varcalls/all_samples/jabCoNtool/final_CNV_probs.tsv",
+            cohort_info_tab="structural_varcalls/all_samples/jabCoNtool/cohort_info_tab.tsv"
     params: jabCoNtool_predict_TL = config["jabCoNtool_predict_TL"],
             calling_type = config["calling_type"],
             lib_ROI= config["lib_ROI"],
