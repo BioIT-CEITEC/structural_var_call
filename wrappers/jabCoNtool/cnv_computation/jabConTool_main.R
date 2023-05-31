@@ -511,18 +511,32 @@ run_all <- function(args){
   }
   setcolorder(sample_tab,c("sample","type"))
 
+
+  if(cohort_data_filename != "no_previous_cohort_data"){
+    cohort_tab <- fread(cohort_data_filename)
+    cohort_tab[,chr := as.character(chr)]
+    cohort_tab <- cohort_tab[!(sample %in% sample_tab$sample)]
+  } else {
+    cohort_tab <- NULL
+  }
+
   #load all data
   res <- load_and_prefilter_sample_data(sample_tab,
                                         panel_intervals_filename,
                                         panel_snps_filename,
                                         library_type,
                                         GC_normalization_file,
-                                        cytoband_file)
+                                        cytoband_file,
+                                        cohort_tab)
   cov_tab <- res[[1]]
   snp_tab <- res[[2]]
   sample_tab[,c("cov_tab_filenames","snp_tab_filenames") := NULL]
 
-
+  if(cohort_data_filename != "no_previous_cohort_data"){
+    #combine sample tab
+    cohort_sample_tab <- data.table(sample = unique(cohort_tab$sample),type = "cohort")
+    sample_tab <- rbind(sample_tab,cohort_sample_tab)
+  }
 
 
   categories_default_tabs <- create_copy_number_categories_default_tabs(default_cn_rel_prob_vec,predict_LOH = !is.null(snp_tab))
@@ -547,66 +561,33 @@ run_all <- function(args){
     iterations = 3
   }
 
-  if(cohort_data_filename != "no_previous_cohort_data"){
-
-    cohort_tab <- fread(cohort_data_filename)
-    cohort_tab[,chr := as.character(chr)]
-    cohort_tab <- cohort_tab[!(sample %in% sample_tab$sample)]
-
-    #combine sample tab
-    cohort_sample_tab <- data.table(sample = unique(cohort_tab$sample),type = "cohort")
-    sample_tab <- rbind(sample_tab,cohort_sample_tab)
-
-    # combine coverage tab
-    region_tab <- unique(cov_tab,by = c("region_id","chr","start","end"))
-    region_tab[,c("sample","cov_raw","cov") := NULL]
-    cohort_cov_tab <- cohort_tab[!is.na(cov)]
-    cohort_cov_tab <- merge.data.table(cohort_cov_tab,region_tab,by = c("chr","start","end"))
-    cohort_cov_tab[,cov_raw := NA]
-    cohort_cov_tab <- cohort_cov_tab[,names(cov_tab),with = F]
-    cov_tab <- rbind(cov_tab,cohort_cov_tab)
-
-    # if(!is.null(snp_tab)){
-    #   # combine snp tab
-    #   region_tab <- unique(snp_tab,by = c("region_id","pos"))
-    #   region_tab[,c("sample","alt_count","ref_count") := NULL]
-    #   cohort_snp_tab <- cohort_tab[!is.na(pos)]
-    #   cohort_snp_tab[,c("cov","start","end") := NULL]
-    #   cohort_snp_tab <- merge.data.table(cohort_snp_tab,region_tab,by = c("chr","pos"))
-    #   setcolorder(cohort_snp_tab,names(snp_tab))
-    #   snp_tab <- rbind(snp_tab,cohort_snp_tab)
-    # }
-
-
-  }
-
-
   res <- predict_CNVs(sample_tab,cov_tab,snp_tab,library_type,trans_mat_list,categories_default_tabs,initial_TL,iterations,complex_FP_probability)
 
   # save(res,file = "test_CNV_call_all_samples_260123.Rdata")
   # load("test_optim_1_init_0_05.Rdata")
 
-  final_cn_pred_info_table <- res[[1]][[iterations]]
+  final_cn_pred_info_table <- copy(res[[1]][[iterations]])
   final_cn_pred_info_table[,cn_pred := categories_default_tabs$cn_categories_tab$cn_category[cn_pred]]
 
   #store the cohort data
   if(cohort_data_filename != "no_previous_cohort_data"){
     calling_info_tab <- rbind(cohort_tab,final_cn_pred_info_table[,names(cohort_tab),with = F])
   } else {
-    calling_info_tab <- final_cn_pred_info_table[,intersect(names(final_cn_pred_info_table),c("sample","chr","start","end","cn_pred","cov","pos","alt_count","ref_count")),with = F]
+    calling_info_tab <- final_cn_pred_info_table[,intersect(names(final_cn_pred_info_table),c("sample","chr","start","end","cn_pred","cov_raw","cov","pos","alt_count","ref_count")),with = F]
   }
   fwrite(calling_info_tab,file = paste0(dirname(out_filename),"/cohort_info_tab.tsv"),sep="\t")
 
   #remove and store too frequent CNVs in the cohort
+  final_cn_pred_info_table[,CNV_in_cohort := length(unique(sample)),by = .(cn_pred,region_id)]
+
   if(cohort_data_filename != "no_previous_cohort_data"){
-    CNV_in_previous_cohort_tab <- cohort_tab[,.(CNV_in_previous_cohort = length(unique(sample))),by = .(cn_pred,region_id)]
-    final_cn_pred_info_table <- merge(final_cn_pred_info_table,CNV_in_previous_cohort_tab,by = c("cn_pred","region_id"),all.x = T)
+
+    CNV_in_previous_cohort_tab <- cohort_tab[,.(CNV_in_previous_cohort = length(unique(sample))),by = .(chr,start,end,cn_pred)]
+    final_cn_pred_info_table <- merge(final_cn_pred_info_table,CNV_in_previous_cohort_tab,by = c("chr","start","end","cn_pred"),all.x = T)
+    setcolorder(final_cn_pred_info_table,c("sample","region_id"))
     final_cn_pred_info_table[is.na(CNV_in_previous_cohort),CNV_in_previous_cohort := 0]
-    final_cn_pred_info_table[,CNV_in_this_cohort := length(unique(sample)),by = .(cn_pred,region_id)]
-    final_cn_pred_info_table[,CNV_in_cohort := CNV_in_this_cohort + CNV_in_previous_cohort]
-    final_cn_pred_info_table[,c("CNV_in_this_cohort","CNV_in_previous_cohort") := NULL]
-  } else {
-    final_cn_pred_info_table[,CNV_in_cohort := length(unique(sample)),by = .(cn_pred,region_id)]
+    final_cn_pred_info_table[,CNV_in_cohort := CNV_in_cohort + CNV_in_previous_cohort]
+    final_cn_pred_info_table[,CNV_in_previous_cohort := NULL]
   }
 
   final_cn_pred_info_table[,samples_in_cohort := length(unique(cov_tab$sample))]
@@ -651,5 +632,18 @@ timestamp()
 # cov_tab[cov < 0,cov := 0]
 # sample_tab <- sample_tab[type == "call"]
 
+
+
+# combine snp tab
+# if(!is.null(snp_tab)){
+#
+#   region_tab <- unique(snp_tab,by = c("region_id","pos"))
+#   region_tab[,c("sample","alt_count","ref_count") := NULL]
+#   cohort_snp_tab <- cohort_tab[!is.na(pos)]
+#   cohort_snp_tab[,c("cov","start","end") := NULL]
+#   cohort_snp_tab <- merge.data.table(cohort_snp_tab,region_tab,by = c("chr","pos"))
+#   setcolorder(cohort_snp_tab,names(snp_tab))
+#   snp_tab <- rbind(snp_tab,cohort_snp_tab)
+# }
 
 

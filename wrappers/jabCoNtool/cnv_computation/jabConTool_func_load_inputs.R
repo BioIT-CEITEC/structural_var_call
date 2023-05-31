@@ -36,16 +36,16 @@ load_panel_intervals <- function(panel_intervals_filename,library_type){
   setkeyv(panel_intervals, c("chr","start","end"))
 }
 
-get_cov_tab <- function(sample_tab,panel_intervals,join_intervals_distance = 0){
+get_cov_tab <- function(sample_tab,panel_intervals,cohort_tab,join_intervals_distance = 0){
   cov_tab <- fread_vector_of_files(sample_tab$cov_tab_filenames,sample_tab$sample)
   cov_tab[,tail(names(cov_tab),3) := NULL]
   setnames(cov_tab,c("V1","V2","V3"),c("chr","start","end"))
   setnames(cov_tab,tail(names(cov_tab),1),c("cov_raw"))
-  
+
   # chr X a Y pořešíme později, zatím analýza bez něj, aby nezkresloval výsledky
   #homsap hack TODO
   cov_tab <- cov_tab[chr %in% 1:22]
-  
+
   #add panel_intervals grouping based on join
   if(join_intervals_distance > 0){
     current_interval_start <- panel_intervals$start[1]
@@ -58,26 +58,35 @@ get_cov_tab <- function(sample_tab,panel_intervals,join_intervals_distance = 0){
       }
       grouping_vec[select_region_id] <- current_group_id
     }
-    
+
     panel_intervals[,grouping_vec := grouping_vec]
   } else {
     panel_intervals[,grouping_vec := region_id]
   }
-  
-  
+
+
   setkey(cov_tab)
   cov_tab <- merge(cov_tab,panel_intervals[,.(chr,start,end,region_id,grouping_vec)],by = c("chr","start","end"))
-  
+
   if(join_intervals_distance > 0){
     cov_tab <- cov_tab[,.(chr = chr[1],start = min(start),end = max(end),cov_raw = sum(cov_raw),region_id = grouping_vec[1]),by = .(sample,grouping_vec)]
   }
   cov_tab[,grouping_vec := NULL]
-  
   cov_tab[,start := c(head(start,1),pmax(tail(start,-1),head(end,-1) + 1)),by = .(sample,chr)]
-  
+
+  if(!is.null(cohort_tab)){
+    # combine coverage tab
+    region_tab <- unique(cov_tab,by = c("region_id","chr","start","end"))
+    region_tab[,c("sample","cov_raw","cov") := NULL]
+    cohort_cov_tab <- cohort_tab[!is.na(cov)]
+    cohort_cov_tab <- merge.data.table(cohort_cov_tab,region_tab,by = c("chr","start","end"))
+    cohort_cov_tab <- cohort_cov_tab[,names(cov_tab),with = F]
+    cov_tab <- rbind(cov_tab,cohort_cov_tab)
+  }
+
   #read coverage normalization
   overall_mean <- mean(cov_tab$cov_raw)
-  cov_tab[,cov := cov_raw / mean(cov_raw) * overall_mean,by = sample] 
+  cov_tab[,cov := cov_raw / mean(cov_raw) * overall_mean,by = sample]
   setcolorder(cov_tab,c("sample","region_id","chr","start","end","cov_raw","cov"))
   return(cov_tab)
 }
@@ -86,39 +95,39 @@ get_snp_tab <- function(sample_tab,panel_snps_filename,panel_intervals,individua
   snp_tab <- fread_vector_of_files(sample_tab$snp_tab_filenames,sample_tab$sample)
   setnames(snp_tab,c("sample","chr","pos","A","C","G","T","cov"))
   snp_tab <- snp_tab[cov > 0]
-  panel_snps <- fread(panel_snps_filename) 
-  
+  panel_snps <- fread(panel_snps_filename)
+
   setnames(panel_snps,c("chr","pos","ref","alt","BAF"))
   #genetics law
   panel_snps[,pop_HET_probability := 2*BAF*(1-BAF)]
-  
+
   panel_snps <- foverlaps(setkey(panel_snps[,.(chr,pos,pos2 = pos,alt,pop_HET_probability)]), panel_intervals, by.x=c("chr","pos","pos2"), by.y=c("chr","start","end"), nomatch = 0)
-  
+
   panel_snps[,c("start","end","region_name","pos2") := NULL]
   setorder(panel_snps,region_id,-pop_HET_probability)
   panel_snps <- unique(panel_snps,by = c("chr","pos"))
-  
+
   snp_tab <- merge(snp_tab,panel_snps,by = c("chr","pos"))
   row_vec <- (seq_along(snp_tab$chr) - 1L) * 4L + as.numeric(factor(snp_tab$alt,levels = c("A","C","G","T")))
   snp_tab[,alt_count := t(as.matrix(snp_tab[,.(A,C,G,`T`)]))[row_vec]]
   snp_tab <-snp_tab[,.(sample,region_id,chr,pos,pop_HET_probability,alt_count,ref_count = cov - alt_count,cov)]
-  
+
   # chr X a Y pořešíme později, zatím analýza bez něj, aby nezkresloval výsledky
   #homsap hack TODO
   snp_tab <- snp_tab[chr %in% 1:22]
-  
+
   snp_tab[,max_pos_cov := max(cov),by = .(chr,pos) ]
-  
+
   snp_tab <- snp_tab[max_pos_cov > max_pos_cov_threshold]
   # snp_tab[cov < individual_cov_threshold,ref_count := NA]
   # snp_tab[cov < individual_cov_threshold,alt_count := NA]
-  
+
   snp_tab[,cov := NULL]
   snp_tab[,max_pos_cov := NULL]
-  
-  # 
+
+  #
   # snp_tab <- snp_tab[chr != "X"] # chr X pořešíme později, zatím analýza bez něj, aby nezkresloval výsledky
-  
+
   setkey(snp_tab,chr,pos,sample)
   return(snp_tab)
 }
@@ -129,14 +138,15 @@ load_and_prefilter_sample_data <- function(sample_tab,
                                            library_type,
                                            GC_normalization_file,
                                            cytoband_file,
+                                           cohort_tab,
                                            outlier_probability = 0,
                                            wgs_outlier_filter_iter = 2,
                                            usable_bases_ratio_threshold = 0.85){
-  
+
   normalization_sample_type <- tail(sort(sample_tab$type),1)
-  
+
   panel_intervals <- load_panel_intervals(panel_intervals_filename,library_type)
-  cov_tab <- get_cov_tab(sample_tab,panel_intervals)
+  cov_tab <- get_cov_tab(sample_tab,panel_intervals,cohort_tab)
   
   if(library_type == "wgs"){
     
