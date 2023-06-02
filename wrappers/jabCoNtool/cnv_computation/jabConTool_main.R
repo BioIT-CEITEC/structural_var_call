@@ -612,7 +612,7 @@ run_all <- function(args){
 args <- commandArgs(trailingOnly = T)
 print("start")
 timestamp()
-run_all(args)
+# run_all(args)
 print("end")
 timestamp()
 

@@ -167,8 +167,8 @@ plot_chromosome_lines <- function(jCT_tab_CNVs,out_filename_prefix,reference = "
     karyotype <- "hg19"
   }
 
-
   pdf(file = paste0(out_filename_prefix,"_chromosome_CNVs.pdf"),width = 10,height = 7)
+  
 
   for(select_sample in unique(jCT_tab_CNVs$sample)){
     # select_sample <- "PC_3_01"
@@ -176,29 +176,44 @@ plot_chromosome_lines <- function(jCT_tab_CNVs,out_filename_prefix,reference = "
     if(karyotype == "hg38" | karyotype == "hg19"){
       plot_tab[,chr := paste0("chr",chr)]
     }
-
-    kp <- plotKaryotype(genome="hg38",chromosomes = paste0("chr",1:22))
+    
+    kp <- plotKaryotype(genome=karyotype,chromosomes = paste0("chr",1:22))
     for(selected_cn_pred in unique(plot_tab$cn_pred)){
       kpRect(kp, data = toGRanges(plot_tab[cn_pred == selected_cn_pred,.(chr,start,end)]), y0=0, y1=0.8,col=CNV_color_tab[CNV == selected_cn_pred]$color,border=CNV_color_tab[CNV == selected_cn_pred]$color)
     }
     kpAddMainTitle(kp, main=select_sample)
-
+    
     my_hist <- ggplot(CNV_color_tab, aes(CNV, fill = CNV)) + geom_bar() + scale_fill_manual(values=CNV_color_tab$color)
-
+    
     # Using the cowplot package
     legend <- cowplot::get_legend(my_hist)
-
+    
     legend$vp$x <- unit(.75, 'npc')
     legend$vp$y <- unit(.33, 'npc')
     grid.draw(legend)
   }
-
 
   dev.off()
 
 
 }
 
+
+recompute_jCT_variants <- function(jCT_tab,join_distance = 200000){
+  jCT_tab[,region_break := as.integer(region_dist > join_distance)]
+  setorder(jCT_tab,sample,chr,start)
+  rle_res <- jCT_tab[,rle(region_break),by = .(sample,chr)]
+  rle_res[,join_region_id := rep(1:(length(values)/2),each = 2),by = .(sample,chr)]
+  rle_res <- rle_res[,.(lengths = sum(lengths)),by = .(sample,chr,join_region_id)]
+  jCT_tab[,join_region_id := rep(rle_res$join_region_id,rle_res$lengths)]
+  
+  
+  rle_res <- jCT_tab[,rle(cn_pred),by = .(sample,chr)]
+  rle_res[,cn_id := seq_along(values),by = .(sample,chr)]
+  jCT_tab[,cn_id := rep(rle_res$cn_id,rle_res$lengths)]
+  jCT_tab[,cn_id := cn_id * join_region_id]
+  return(jCT_tab)
+}
 
 get_jCT_CNV_tab <- function(jCT_tab,library_type){
 
@@ -233,7 +248,6 @@ get_jCT_CNV_tab <- function(jCT_tab,library_type){
   }
 
   jCT_tab_CNVs[,cn_id := NULL]
-  jCT_tab_CNVs <- jCT_tab_CNVs[cn_pred != normal_cn_value,]
 
   return(jCT_tab_CNVs)
 
@@ -258,6 +272,7 @@ run_all <- function(args){
     panel_intervals[,region_name := paste(chr,start,sep = "_")]
   }
   setnames(panel_intervals,c("chr","start","end","region_name"))
+  panel_intervals[,region_dist := c(tail(start,-1) - head(end, -1),Inf),by = .(chr)]
   setkey(panel_intervals,chr,start,end)
 
   library_type <- args[4]
@@ -267,9 +282,7 @@ run_all <- function(args){
     jCT_tab <- fread(args[which(args == "jabCoNtool") + 1])
     jCT_tab[,chr := as.character(chr)]
     jCT_tab <- merge(jCT_tab,panel_intervals,by = c("chr","start","end"))
-    rle_res <- jCT_tab[,rle(cn_pred),by = .(sample,chr)]
-    rle_res[,cn_id := seq_along(values),by = .(sample,chr)]
-    jCT_tab[,cn_id := rep(rle_res$cn_id,rle_res$lengths)]
+    jCT_tab <- recompute_jCT_variants(jCT_tab)
 
     #plot res
     prob_plot(jCT_tab,paste0(result_dir,"/jabCoNtool_all"))
@@ -282,13 +295,19 @@ run_all <- function(args){
 
     jCT_tab_CNVs <- get_jCT_CNV_tab(jCT_tab,library_type)
 
-    write.xlsx(jCT_tab_CNVs,paste0(result_dir,"/jabCoNtool_all_CNV_tab.xlsx"))
+    
+    
     plot_chromosome_lines(jCT_tab_CNVs,paste0(result_dir,"/jabCoNtool_all"))
     for(select_sample in unique(jCT_tab$sample)){
+      select_sample <- jCT_tab$sample[1]
       plot_chromosome_lines(jCT_tab_CNVs[sample == select_sample],paste0(per_sample_results_dir,"/jabCoNtool_",select_sample))
-      write.xlsx(jCT_tab_CNVs[sample == select_sample],paste0(per_sample_results_dir,"/jabCoNtool_",select_sample,"_CNV_tab.xlsx"))
     }
 
+    jCT_tab_CNVs <- jCT_tab_CNVs[cn_pred != normal_cn_value,]
+    write.xlsx(jCT_tab_CNVs,paste0(result_dir,"/jabCoNtool_all_CNV_tab.xlsx"))
+    for(select_sample in unique(jCT_tab$sample)){
+      write.xlsx(jCT_tab_CNVs[sample == select_sample],paste0(per_sample_results_dir,"/jabCoNtool_",select_sample,"_CNV_tab.xlsx"))
+    }
   }
 
   fwrite(jCT_tab_CNVs,file = final_CNV_vars_outfilename,sep = "\t")
@@ -297,17 +316,17 @@ run_all <- function(args){
 
 
 # develop and test
-
-script_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
-setwd(paste0(script_dir,"/../.."))
-args <- readLines(con = "logs/process_and_format_CNV.log_Rargs")
-args <- strsplit(args,split = " ")[[1]]
+# 
+# script_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+# setwd(paste0(script_dir,"/../.."))
+# args <- readLines(con = "logs/process_and_format_CNV.log_Rargs")
+# args <- strsplit(args,split = " ")[[1]]
 
 #run as Rscript
 
-# script_dir <- dirname(sub("--file=", "", commandArgs()[grep("--file=", commandArgs())]))
-# args <- commandArgs(trailingOnly = T)
-# run_all(args)
+script_dir <- dirname(sub("--file=", "", commandArgs()[grep("--file=", commandArgs())]))
+args <- commandArgs(trailingOnly = T)
+run_all(args)
 
 
 
