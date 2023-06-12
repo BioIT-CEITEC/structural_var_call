@@ -77,16 +77,25 @@ get_cov_tab <- function(sample_tab,panel_intervals,cohort_tab,join_intervals_dis
   if(!is.null(cohort_tab)){
     # combine coverage tab
     region_tab <- unique(cov_tab,by = c("region_id","chr","start","end"))
-    region_tab[,c("sample","cov_raw","cov") := NULL]
+    region_tab[,c("sample","cov_raw") := NULL]
     cohort_cov_tab <- cohort_tab[!is.na(cov)]
     cohort_cov_tab <- merge.data.table(cohort_cov_tab,region_tab,by = c("chr","start","end"))
+    cohort_cov_tab[,cov_raw := NA]
+    
+    #read coverage normalization - normalize to the cohort mean
+    overall_mean <- mean(cohort_cov_tab$cov)
+    cov_tab[,cov := cov_raw / mean(cov_raw) * overall_mean,by = sample]
+    
+    #combine tables
     cohort_cov_tab <- cohort_cov_tab[,names(cov_tab),with = F]
     cov_tab <- rbind(cov_tab,cohort_cov_tab)
+  } else {
+    #read coverage normalization
+    overall_mean <- mean(cov_tab$cov_raw)
+    cov_tab[,cov := cov_raw / mean(cov_raw) * overall_mean,by = sample]
   }
 
-  #read coverage normalization
-  overall_mean <- mean(cov_tab$cov_raw)
-  cov_tab[,cov := cov_raw / mean(cov_raw) * overall_mean,by = sample]
+ 
   setcolorder(cov_tab,c("sample","region_id","chr","start","end","cov_raw","cov"))
   return(cov_tab)
 }

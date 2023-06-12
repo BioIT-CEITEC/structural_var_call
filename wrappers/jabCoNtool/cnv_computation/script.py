@@ -33,7 +33,7 @@ if hasattr(snakemake.input, "snp_bed"):
 else:
     panel_snps_filename = "no_use_snps"
 
-if hasattr(snakemake.input, "jabCoNtool_normalize_to_GC"):
+if hasattr(snakemake.input, "GC_profile_file"):
     GC_normalization_file = snakemake.input.GC_profile_file
 else:
     GC_normalization_file = "no_GC_norm"

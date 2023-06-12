@@ -304,9 +304,10 @@ run_all <- function(args){
     }
 
     jCT_tab_CNVs <- jCT_tab_CNVs[cn_pred != normal_cn_value,]
-    write.xlsx(jCT_tab_CNVs,paste0(result_dir,"/jabCoNtool_all_CNV_tab.xlsx"))
+    write.xlsx(list(CNVs = jCT_tab_CNVs,all_region_res = jCT_tab),paste0(result_dir,"/jabCoNtool_all_CNV_tab.xlsx"))
     for(select_sample in unique(jCT_tab$sample)){
-      write.xlsx(jCT_tab_CNVs[sample == select_sample],paste0(per_sample_results_dir,"/jabCoNtool_",select_sample,"_CNV_tab.xlsx"))
+      write.xlsx(list(CNVs = jCT_tab_CNVs[sample == select_sample],
+                      all_region_res = jCT_tab[sample == select_sample]),paste0(per_sample_results_dir,"/jabCoNtool_",select_sample,"_CNV_tab.xlsx"))
     }
   }
 
