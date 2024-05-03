@@ -24,18 +24,19 @@ def bam_inputs(wildcards):
 
 
 
-rule manta:
+rule delly:
     input:
         unpack(bam_inputs),
         ref = config["organism_fasta"],
         regions_gz = config["organism_dna_panel"] + ".gz",
         regions_tbi = config["organism_dna_panel"] + ".gz.tbi",
-    output: vcf="structural_varcalls/{sample_name}/manta/result_SV.vcf",
-    log: "logs/{sample_name}/manta/manta.log"
+    output:
+        som_sv_vcf="structural_varcalls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
+        som_sv_tbi="structural_varcalls/{sample_name}/manta/results/variants/tumorSV.vcf.gz.tbi",
+    log: "logs/{sample_name}/callers/manta.log"
     threads: 5
     resources: mem=6
     params: dir = "structural_varcalls/{sample_name}/manta",
-            manta_sv_vcf="structural_varcalls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
             library_scope = config["lib_ROI"],
             calling_type = config["calling_type"]
     conda:  "../wrappers/manta/env.yaml"

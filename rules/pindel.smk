@@ -30,7 +30,7 @@ rule pindel:
         config="cnv_sv/pindel/{donor}.cfg",
         bam=tumor_bam_input,
         bai=tumor_bam_bai_input,
-        ref=expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],
+        ref=config["organism_fasta"],
     output:
         pindel=expand("cnv_sv/pindel/{{donor}}_{ext}",ext=["BP","CloseEndMapped","D","INT_final","INV","LI","RP","SI","TD",],),
     params:
@@ -46,7 +46,7 @@ rule pindel:
 rule pindel2vcf:
     input:
         pindel=expand("cnv_sv/pindel/{{donor}}_{ext}",ext=["BP","CloseEndMapped","D","INT_final","INV","LI","RP","SI","TD",],),
-        ref=expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],
+        ref=config["organism_fasta"],
     output:
         vcf="cnv_sv/pindel/{donor}.vcf",
     params:

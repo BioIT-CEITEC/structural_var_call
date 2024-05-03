@@ -42,10 +42,10 @@ for line in seg_in:
         start_pos = columns[1]
         end_pos = columns[2]
         svlen = int(end_pos) - int(start_pos) + 1
-        nr_probes = columns[12]
+        nr_probes = columns[10]
         log_odds_ratio = columns[4]
         baf = columns[5]
-        dp = columns[11]
+        dp = columns[9]
         cn = round(2*pow(2, float(log_odds_ratio)), 2)
         ref = "N"
         alt = ""
