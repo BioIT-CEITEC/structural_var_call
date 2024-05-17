@@ -34,8 +34,6 @@ rule process_and_format_CNV:
     conda:  "../wrappers/process_and_format_CNV/env.yaml"
     script: "../wrappers/process_and_format_CNV/script.py"
 
-
-
 rule final_alignment_report:
     input:  all_vars_tsv= "final_CNV_results/CNV_variants.tsv",
     output: html = "reports/final_SV_report.html"

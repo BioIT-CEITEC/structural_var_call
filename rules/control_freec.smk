@@ -22,16 +22,14 @@ def bam_inputs(wildcards):
     # else:
     #     tag = "RNAsplit.bam"
 
-
-
 rule control_freec:
     input:
         unpack(bam_inputs),
-        ref = config["organism_fasta"],
-        ref_fai = config["organism_fasta"] + ".fai",
+        ref = config["organism_fasta"], #defined in bioroots utilities
+        ref_fai = config["organism_fasta"] + ".fai", #defined in bioroots utilities
         GC_profile_file = expand("structural_varcalls/all_samples/GC_profile_{window_size}.cnp",window_size=config["wgs_bin_size"])[0],
         region_bed = expand("structural_varcalls/all_samples/binned_genome_{window_size}.bed",window_size=config["wgs_bin_size"])[0],
-        snp_bed = config["organism_snps_panel"],
+        snp_bed = config["organism_snps_panel"], #defined in bioroots utilities
         config_template = "wrappers/control_freec/control_freec_config_template_WGS.txt"
     output:
         # info = "structural_varcalls/{sample_name}/control_freec/info.txt",

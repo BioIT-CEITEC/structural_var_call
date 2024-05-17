@@ -35,10 +35,8 @@ if config["use_manta"]:
 if config["use_gridss"]:
     used_SV_callers.append("gridss")
 
-
 wildcard_constraints:
      tumor_normal = "tumor|normal|sample",
-
 
 ####################################
 # SEPARATE RULES
@@ -54,8 +52,6 @@ include: "rules/variant_postprocessing.smk"
 include: "rules/common_prep.smk"
 # include: "rules/vep.smk"
 
-
-
 ####################################
 # RULE ALL
 def all_inputs(wildcards):
@@ -67,3 +63,10 @@ def all_inputs(wildcards):
 
 rule all:
     input: unpack(all_inputs)
+
+##### BioRoot utilities - prepare reference #####
+module PR:
+    snakefile: gitlab("bioroots/bioroots_utilities", path="prepare_reference.smk",branch="master")
+    config: config
+
+use rule * from PR as other_*

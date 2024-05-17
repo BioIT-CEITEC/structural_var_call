@@ -10,7 +10,6 @@ rule picard_insert_size:
     conda:  "../wrappers/picard_insert_size/env.yaml"
     script: "../wrappers/picard_insert_size/script.py"
 
-
 rule generate_pindel_config:
     input:
         bam=tumor_bam_input,
@@ -30,7 +29,7 @@ rule pindel:
         config="cnv_sv/pindel/{donor}.cfg",
         bam=tumor_bam_input,
         bai=tumor_bam_bai_input,
-        ref=config["organism_fasta"],
+        ref=config["organism_fasta"], #defined in bioroots utilities
     output:
         pindel=expand("cnv_sv/pindel/{{donor}}_{ext}",ext=["BP","CloseEndMapped","D","INT_final","INV","LI","RP","SI","TD",],),
     params:
@@ -46,7 +45,7 @@ rule pindel:
 rule pindel2vcf:
     input:
         pindel=expand("cnv_sv/pindel/{{donor}}_{ext}",ext=["BP","CloseEndMapped","D","INT_final","INV","LI","RP","SI","TD",],),
-        ref=config["organism_fasta"],
+        ref=config["organism_fasta"], #defined in bioroots utilities
     output:
         vcf="cnv_sv/pindel/{donor}.vcf",
     params:

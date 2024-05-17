@@ -1,5 +1,3 @@
-
-
 rule filter_vep:
     input:
         vcf="snv_indels/ensemble_vcf/{sample_name}.ensembled.vep_annotated.vcf", #vstup je ENSEMBLE VCF z nekolika indel calleru

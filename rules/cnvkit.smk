@@ -5,11 +5,10 @@ def get_bam_input(wildcards):
     else:
         return expand("mapped/{input_bam}.bam",input_bam=wildcards.sample_name)[0]
 
-
 rule cnvkit_prepare_region_beds:
     input:
-        reference = config["organism_fasta"],
-        regions = config["organism_dna_panel"],
+        reference = config["organism_fasta"], #defined in bioroots utilities
+        regions = config["organism_dna_panel"], #defined in bioroots utilities
     output:
         reference_bed = "structural_varcalls/cnvkit_prepare_reference/reference_bed.bed",
         target = "structural_varcalls/all_samples/cnvkit/target.bed",
@@ -35,7 +34,7 @@ rule cnvkit_prepare_region_beds:
 rule cnvkit_get_coverage:
     input:
         bam = get_bam_input,
-        reference = config["organism_fasta"],
+        reference = config["organism_fasta"], #defined in bioroots utilities
         target="structural_varcalls/all_samples/cnvkit/target.bed",
         antitarget="structural_varcalls/all_samples/cnvkit/antitarget.bed"
     output:
@@ -72,7 +71,7 @@ def normal_coverage_inputs(wildcards):
 rule cnvkit_prepare_reference:
     input:
         unpack(normal_coverage_inputs),
-        reference = config["organism_fasta"],
+        reference = config["organism_fasta"], #defined in bioroots utilities
     output:
         reference_cnn="structural_varcalls/all_samples/cnvkit/normal_reference.cnn",
     log:
@@ -109,12 +108,11 @@ rule cnvkit_fix_and_segment:
     script:
         "../wrappers/cnvkit/cnvkit_fix_and_segment.py"
 
-
 rule vardict:
     input:  bam = "mapped/{bam_name}.bam",
-            ref = config["organism_fasta"],
-            refdict = config["organism_dict"],
-            regions = config["organism_dna_panel"],
+            ref = config["organism_fasta"], #defined in bioroots utilities
+            refdict = config["organism_dict"], #defined in bioroots utilities
+            regions = config["organism_dna_panel"], #defined in bioroots utilities
     output: vcf="structural_varcalls/{sample_name}/cnvkit/vardict_SNV_{bam_name}.vcf",
     log: "logs/{sample_name}/cnvkit/{bam_name}_vardict.log"
     threads: 8
@@ -124,13 +122,11 @@ rule vardict:
     conda: "../wrappers/vardict/env.yaml"
     script: "../wrappers/vardict/script.py"
 
-
 def vardict_SNV_vcf_input(wildcards):
     if config["calling_type"] == "tumor_normal":
         return expand("structural_varcalls/{sample_name}/cnvkit/vardict_SNV_{input_bam}.vcf",sample_name = wildcards.sample_name,input_bam=sample_tab.loc[(sample_tab["donor"] == wildcards.sample_name) & (sample_tab["tumor_normal"] == "normal"), "sample_name"])[0],
     else:
         return expand("structural_varcalls/{sample_name}/cnvkit/vardict_SNV_{sample_name}.vcf",sample_name = wildcards.sample_name)[0],
-
 
 rule cnvkit_call:
     input:
@@ -149,8 +145,6 @@ rule cnvkit_call:
         "../wrappers/cnvkit/env.yaml"
     shell:
         "(cnvkit.py call -y -m clonal {input.segment} -o {output.calls} --purity {params.TC} {params.extra}) &> {log}"
-
-
 
 rule cnvkit_diagram:
     input:
@@ -186,7 +180,6 @@ rule cnvkit_scatter:
         "../wrappers/cnvkit/env.yaml"
     shell:
         "(cnvkit.py scatter {input.cnr} -s {input.cns} -v {input.vcf} -o {output.plot} {params.extra}) &> {log}"
-
 
 # rule cnvkit_convert_to_vcf:
 #     input:

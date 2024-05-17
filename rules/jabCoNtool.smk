@@ -1,4 +1,3 @@
-
 def get_bam_input(wildcards):
     if config["calling_type"] == "tumor_normal":
         input_bam_name = sample_tab.loc[(sample_tab["tumor_normal"] == wildcards.tumor_normal) & (sample_tab["donor"]==wildcards.sample_name), "sample_name"]
@@ -15,7 +14,7 @@ def get_region_bed_input(wildcards):
 rule jabCoNtool_per_sample_coverage:
     input:  bam = get_bam_input,
             region_bed = get_region_bed_input,
-            ref_dict = config["organism_fasta"] + ".fai",
+            ref_dict = config["organism_fasta"] + ".fai", #defined in bioroots utilities
     output: cov_tab = "structural_varcalls/{sample_name}/jabCoNtool/{tumor_normal}.region_coverage.tsv",
     log:    "logs/{sample_name}/jabCoNtool/{tumor_normal}_get_coverage.log"
     threads: 8
@@ -25,15 +24,14 @@ rule jabCoNtool_per_sample_coverage:
 
 rule jabCoNtool_per_sample_snp_AF:
     input:  bam = get_bam_input,
-            ref = config["organism_fasta"],
-            snp_tsv = config["organism_snps_panel"].replace(".bed", ".tsv"),
+            ref = config["organism_fasta"], #defined in bioroots utilities 
+            snp_tsv = config["organism_snps_panel"].replace(".bed", ".tsv"), #defined in bioroots utilities
     output: snp_tab = "structural_varcalls/{sample_name}/jabCoNtool/{tumor_normal}.snpAF.tsv",
     log:    "logs/{sample_name}/jabCoNtool/{tumor_normal}_get_snpAF.log"
     threads: 8
     resources: mem=10
     conda:  "../wrappers/jabCoNtool/per_sample_snp_AF_computing/env.yaml"
     script: "../wrappers/jabCoNtool/per_sample_snp_AF_computing/script.py"
-
 
 def jabCoNtool_cnv_computation_inputs(wildcards):
     input_dict = {}
@@ -65,7 +63,6 @@ def jabCoNtool_cnv_computation_inputs(wildcards):
         input_dict["snp_bed"] = config["organism_snps_panel"].replace(".bed", ".tsv")
     return input_dict
 
-
 rule jabCoNtool_cnv_computation:
     input: unpack(jabCoNtool_cnv_computation_inputs)
     output: all_res_prob_tab="structural_varcalls/all_samples/jabCoNtool/final_CNV_probs.tsv",
@@ -78,7 +75,6 @@ rule jabCoNtool_cnv_computation:
     threads: workflow.cores
     conda:  "../wrappers/jabCoNtool/cnv_computation/env.yaml"
     script: "../wrappers/jabCoNtool/cnv_computation/script.py"
-
 
 # rule jabCoNtool_get_per_sample_res:
 #     input:  all_res_prob_tab="structural_varcalls/all_samples/jabCoNtool/final_CNV_probs.tsv"

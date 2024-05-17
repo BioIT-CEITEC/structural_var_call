@@ -1,6 +1,6 @@
 
 rule get_binned_bed_from_dict:
-    input:  ref_dict = config["organism_dict"],
+    input:  ref_dict = config["organism_dict"], #defined in bioroots utilities
     output: bed = expand("structural_varcalls/all_samples/binned_genome_{window_size}.bed",window_size=config["wgs_bin_size"])[0],
     log:    "logs/get_binned_bed_from_dict.log"
     threads: 1
@@ -11,7 +11,7 @@ rule get_binned_bed_from_dict:
 
 rule get_binned_gc_content:
     input:  region_bed = expand("structural_varcalls/all_samples/binned_genome_{window_size}.bed",window_size=config["wgs_bin_size"])[0],
-            ref = config["organism_fasta"],
+            ref = config["organism_fasta"], #defined in bioroots utilities
     output: gc_content_file = expand("structural_varcalls/all_samples/GC_profile_{window_size}.cnp",window_size=config["wgs_bin_size"])[0],
     log:    "logs/get_binned_gc_content.log"
     threads: 1

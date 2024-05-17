@@ -22,14 +22,12 @@ def bam_inputs(wildcards):
     # else:
     #     tag = "RNAsplit.bam"
 
-
-
 rule manta:
     input:
         unpack(bam_inputs),
-        ref = config["organism_fasta"],
-        regions_gz = config["organism_dna_panel"] + ".gz",
-        regions_tbi = config["organism_dna_panel"] + ".gz.tbi",
+        ref = config["organism_fasta"], #defined in bioroots utilities
+        regions_gz = config["organism_dna_panel"] + ".gz", #defined in bioroots utilities
+        regions_tbi = config["organism_dna_panel"] + ".gz.tbi", #defined in bioroots utilities
     output: vcf="structural_varcalls/{sample_name}/manta/result_SV.vcf",
     log: "logs/{sample_name}/manta/manta.log"
     threads: 5

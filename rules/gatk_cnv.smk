@@ -2,8 +2,8 @@
 rule gatk_cnv_collect_allelic_counts:
     input:
         bam=get_bam_input,
-        interval = config["organism_snps_panel"],
-        ref = config["organism_fasta"],
+        interval = config["organism_snps_panel"], #defined in bioroots utilities
+        ref = config["organism_fasta"], #defined in bioroots utilities
     output:
         "structural_varcalls/{sample_name}/gatk_cnv/{tumor_normal}_clean.allelicCounts.tsv",
     params:
@@ -25,7 +25,7 @@ rule gatk_cnv_collect_allelic_counts:
 rule gatk_cnv_collect_read_counts:
     input:
         bam = get_bam_input,
-        interval = config["organism_dna_panel"]
+        interval = config["organism_dna_panel"] #defined in bioroots utilities
     output:
         "structural_varcalls/{sample_name}/gatk_cnv/{tumor_normal}_read_counts.hdf5",
     params:
