@@ -2,7 +2,7 @@
   "workflow_description": {
     "name":"structural_var_call",
     "version": 2.0,
-    "label":"Structural variant calling 3",
+    "label":"Structural variant calling",
     "type":"var_call",
     "run_parameters": {
       "cpu": 31,
