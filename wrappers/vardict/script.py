@@ -21,8 +21,8 @@ f.close()
 #AttributeError: 'Wildcards' object has no attribute 'full_name'
 # replace 'full_name' with fullname
 
-TEST_STRAND_BIAS = os.path.abspath(os.path.dirname(__file__)) + "/teststrandbias.R"
-VAR2VCF = os.path.abspath(os.path.dirname(__file__)) + "/var2vcf_valid.pl"
+TEST_STRAND_BIAS = "Rscript " + os.path.abspath(os.path.dirname(__file__)) + "/teststrandbias.R"
+VAR2VCF = "perl " + os.path.abspath(os.path.dirname(__file__)) + "/var2vcf_valid.pl"
 
 command = "vardict-java -G " + snakemake.input.ref + \
           " -th " + str(snakemake.threads) + \
