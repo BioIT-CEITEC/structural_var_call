@@ -1,7 +1,7 @@
 
 def get_bam_input(wildcards):
     if config["calling_type"] == "tumor_normal":
-        input_bam_name = sample_tab.loc[(sample_tab["tumor_normal"] == wildcards.tumor_normal) & (sample_tab["donor"]==wildcards.sample_name), "sample_name"]
+        input_bam_name = sample_tab.loc[(sample_tab["tumor_normal"] == wildcards.tumor_normal) & (sample_tab["donor"]==wildcards.sample_name), "sample_name"][0]
         return "mapped/" + input_bam_name + ".bam"
     else:
         return expand("mapped/{input_bam}.bam",input_bam=wildcards.sample_name)[0]
@@ -46,7 +46,7 @@ def jabCoNtool_cnv_computation_inputs(wildcards):
             input_dict["snp_AF"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/tumor.snpAF.tsv",sample_name=
                 sample_tab.loc[sample_tab.tumor_normal == "tumor", "donor"].tolist()))
             input_dict["normal_snp_AF"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/normal.snpAF.tsv",sample_name=
-                sample_tab.sample_name.tolist()))
+                sample_tab.loc[sample_tab.tumor_normal == "normal", "donor"].tolist()))
     else:
         input_dict["sample_cov"] = set(expand("structural_varcalls/{sample_name}/jabCoNtool/sample.region_coverage.tsv",sample_name=sample_tab.sample_name.tolist()))
         if config["jabCoNtool_use_snps"] == True:

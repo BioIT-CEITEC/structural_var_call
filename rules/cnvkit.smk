@@ -127,7 +127,13 @@ rule vardict:
 
 def vardict_SNV_vcf_input(wildcards):
     if config["calling_type"] == "tumor_normal":
-        return expand("structural_varcalls/{sample_name}/cnvkit/vardict_SNV_{input_bam}.vcf",sample_name = wildcards.sample_name,input_bam=sample_tab.loc[(sample_tab["donor"] == wildcards.sample_name) & (sample_tab["tumor_normal"] == "normal"), "sample_name"])[0],
+        if not sample_tab.loc[(sample_tab["donor"] == wildcards.sample_name) & (sample_tab["tumor_normal"] == "normal"),].empty:
+            return expand("structural_varcalls/{sample_name}/cnvkit/vardict_SNV_{input_bam}.vcf",sample_name = wildcards.sample_name,input_bam=sample_tab.loc[(sample_tab["donor"] == wildcards.sample_name) & (sample_tab["tumor_normal"] == "normal"), "sample_name"])[0],
+        else:
+            return \
+            expand("structural_varcalls/{sample_name}/cnvkit/vardict_SNV_{input_bam}.vcf",sample_name=wildcards.sample_name,input_bam=
+            sample_tab.loc[(sample_tab["donor"] == wildcards.sample_name) & (
+                        sample_tab["tumor_normal"] == "tumor"), "sample_name"])[0],
     else:
         return expand("structural_varcalls/{sample_name}/cnvkit/vardict_SNV_{sample_name}.vcf",sample_name = wildcards.sample_name)[0],
 
