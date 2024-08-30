@@ -7,12 +7,35 @@ library(cowplot)
 library(grid)
 library(gridExtra)
 library(openxlsx)
+library(biomaRt)
 
 #set_constants
 normal_cn_value <- "2"
 CNV_color_tab <- data.table(CNV = c("0","1","2","3","4","5","LOH"),
                             color = c("red","coral1","grey","skyblue2","royalblue3","navyblue","yellow3"))
 
+
+recompute_jCT_variants <- function(final_cn_pred_info_table,join_distance = 1000000){
+  jCT_tab <- copy(final_cn_pred_info_table)
+  jCT_tab <- unique(jCT_tab[,.(sample,region_id,chr,start,end,cn_pred)])
+  jCT_tab[,region_dist := c(tail(start,-1) - head(end, -1),Inf),by = .(sample,chr)]
+  jCT_tab[,region_break := as.integer(region_dist > join_distance)]
+  setorder(jCT_tab,sample,chr,start)
+  rle_res <- jCT_tab[,rle(region_break),by = .(sample,chr)]
+  rle_res[values == 1,join_region_id := seq_along(values),by = .(sample)]
+  rle_res[values == 0,join_region_id := rle_res$join_region_id[which(rle_res$values == 0)+1]]
+  rle_res <- rle_res[,.(lengths = sum(lengths)),by = .(sample,chr,join_region_id)]
+  jCT_tab[,join_region_id := rep(rle_res$join_region_id,rle_res$lengths)]
+  
+  rle_res <- jCT_tab[,rle(cn_pred),by = .(sample)]
+  rle_res[,cn_id := seq_along(values),by = .(sample)]
+  jCT_tab[,cn_id := rep(rle_res$cn_id,rle_res$lengths)]
+  jCT_tab[,cn_id := cn_id * join_region_id]
+  final_cn_pred_info_table <- merge(final_cn_pred_info_table,jCT_tab[,.(sample,region_id,new_cn_id = cn_id)],by = c("sample","region_id"))
+  final_cn_pred_info_table[,cn_id := new_cn_id]
+  final_cn_pred_info_table[,new_cn_id := NULL]
+  return(final_cn_pred_info_table)
+}
 
 
 plot_chromosome_circo <- function(){
@@ -278,25 +301,24 @@ get_jCT_CNV_tab <- function(jCT_tab,library_type){
     jCT_tab[,sd_dist := (cov - norm_dist_mean) / norm_dist_sd]
   }
 
-  if(any(names(jCT_tab) == "pop_HET_probability")){
+  # if(any(names(jCT_tab) == "pop_HET_probability")){
+  #   jCT_tab_CNVs <-  jCT_tab[,.(cn_pred = cn_pred[1],
+  #                               start = min(start),
+  #                               end = max(end),
+  #                               len = max(end) - min(start),
+  #                               cov = median(cov,na.rm = T),
+  #                               cov_rel_dist = median(sd_dist,na.rm = T),
+  #                               SNP_BAF = weighted.mean(alt_count/ref_count,pop_HET_probability),
+  #                               SNP_weight = sum(pop_HET_probability),
+  #                               region_names = paste(unique(region_name),collapse = ",")),by = .(sample,chr,cn_id)]
+  # } else {
     jCT_tab_CNVs <-  jCT_tab[,.(cn_pred = cn_pred[1],
                                 start = min(start),
                                 end = max(end),
                                 len = max(end) - min(start),
                                 cov = median(cov,na.rm = T),
-                                cov_rel_dist = median(sd_dist,na.rm = T),
-                                SNP_BAF = weighted.mean(alt_count/ref_count,pop_HET_probability),
-                                SNP_weight = sum(pop_HET_probability),
-                                region_names = paste(unique(region_name),collapse = ",")),by = .(sample,chr,cn_id)]
-  } else {
-    jCT_tab_CNVs <-  jCT_tab[,.(cn_pred = cn_pred[1],
-                                start = min(start),
-                                end = max(end),
-                                len = max(end) - min(start),
-                                cov = median(cov,na.rm = T),
-                                cov_rel_dist = median(sd_dist,na.rm = T),
-                                region_names = paste(unique(region_name),collapse = ",")),by = .(sample,chr,cn_id)]
-  }
+                                cov_rel_dist = median(sd_dist,na.rm = T)),by = .(sample,chr,cn_id)]
+  # }
 
   if(length(unique(jCT_tab$sample)) == 1){
     jCT_tab_CNVs[,sample := NULL]
@@ -353,9 +375,69 @@ run_all <- function(args){
     jCT_tab <- fread(args[which(args == "jabCoNtool") + 1])
     jCT_tab[,chr := as.character(chr)]
     jCT_tab <- merge(jCT_tab,panel_intervals,by = c("chr","start","end"))
-    # rle_res <- jCT_tab[,rle(cn_pred),by = .(sample,chr)]
-    # rle_res[,cn_id := seq_along(values),by = .(sample,chr)]
-    # jCT_tab[,cn_id := rep(rle_res$cn_id,rle_res$lengths)]
+
+    jCT_tab[,cn_pred_orig := cn_pred]
+    jCT_tab <- jCT_tab[!is.na(cov)]
+    jCT_tab[,cn_pred_new := cov / norm_dist_mean * 2]
+    jCT_tab[,cn_pred := round(cn_pred_new)]
+    jCT_tab[,cn_pred := as.character(cn_pred)]
+    
+    sample_count <- length(unique(jCT_tab$sample))
+    jCT_tab[,CNV_perc := sum(cn_pred != "2") / sample_count,by = region_id]
+    jCT_tab[CNV_perc > 0.25,cn_pred := "2"]
+    
+    setkey(jCT_tab,sample,chr)
+    rle_res <- jCT_tab[,rle(cn_pred),by = .(sample,chr)]
+    rle_res[,cn_id := seq_along(values),by = .(sample,chr)]
+    jCT_tab[,cn_id := rep(rle_res$cn_id,rle_res$lengths)]
+    
+    
+    jCT_tab[,CNV_size := 0]
+    jCT_tab[,CNV_size := .N,by = c("sample","chr","cn_pred","cn_id")]
+
+    jCT_tab[,CNV_prev := c("NA",head(cn_pred,-1)),by = c("sample","chr")]
+    jCT_tab[,CNV_next := c(tail(cn_pred,-1),"NA"),by = c("sample","chr")]
+    jCT_tab[,CNV_join := CNV_prev[1] == CNV_next[.N],by = c("sample","chr","cn_pred","cn_id")]
+    jCT_tab[CNV_join == T & CNV_size < 5,cn_pred := CNV_prev[1],by = c("sample","chr","cn_pred","cn_id")]
+    
+    setkey(jCT_tab,sample,chr)
+    rle_res <- jCT_tab[,rle(cn_pred),by = .(sample,chr)]
+    rle_res[,cn_id := seq_along(values),by = .(sample,chr)]
+    jCT_tab[,cn_id := rep(rle_res$cn_id,rle_res$lengths)]
+    
+    jCT_tab[,CNV_size := 0]
+    jCT_tab[,CNV_size := .N,by = c("sample","chr","cn_pred","cn_id")]
+    
+    jCT_tab[CNV_size < 15,cn_pred := "2"]
+    
+    setkey(jCT_tab,sample,chr)
+    rle_res <- jCT_tab[,rle(cn_pred),by = .(sample,chr)]
+    rle_res[,cn_id := seq_along(values),by = .(sample,chr)]
+    jCT_tab[,cn_id := rep(rle_res$cn_id,rle_res$lengths)]
+    
+    jCT_tab[,CNV_size := 0]
+    jCT_tab[,CNV_size := .N,by = c("sample","chr","cn_pred","cn_id")]
+    
+    jCT_tab[,CNV_prev := c("NA",head(cn_pred,-1)),by = c("sample","chr")]
+    jCT_tab[,CNV_next := c(tail(cn_pred,-1),"NA"),by = c("sample","chr")]
+    jCT_tab[,CNV_join := CNV_prev[1] == CNV_next[.N],by = c("sample","chr","cn_pred","cn_id")]
+    jCT_tab[CNV_join == T & CNV_size < 5,cn_pred := CNV_prev[1],by = c("sample","chr","cn_pred","cn_id")]
+    
+    setkey(jCT_tab,sample,chr)
+    rle_res <- jCT_tab[,rle(cn_pred),by = .(sample,chr)]
+    rle_res[,cn_id := seq_along(values),by = .(sample,chr)]
+    jCT_tab[,cn_id := rep(rle_res$cn_id,rle_res$lengths)]
+    
+    jCT_tab <- recompute_jCT_variants(jCT_tab)
+    
+    # jCT_tab[sample == "04_103"][start > (144373563 - 10000)][1:50]
+    
+    
+    # table(unique(jCT_tab,by = c("sample","chr","cn_pred","cn_id"))$CNV_size)
+    
+    
+    
+    
     jCT_tab_CNVs <- get_jCT_CNV_tab(jCT_tab,library_type)
     
     
@@ -382,7 +464,40 @@ run_all <- function(args){
       direct_cov_plot(jCT_tab[sample == select_sample],paste0(per_sample_results_dir,"/jabCoNtool_",select_sample),library_type,tumor_cell_fraction_table)
     }
 
-
+    mart <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+    # Get gene coordinates from Ensembl
+    genes <- getBM(attributes = c('ensembl_gene_id', 'external_gene_name', 'chromosome_name', 'start_position', 'end_position'),
+                   mart = mart)
+    
+    # Convert the gene annotations to a data.table
+    genes_dt <- data.table(
+      chr = genes$chromosome_name,
+      gene_start = genes$start_position,
+      gene_end = genes$end_position,
+      gene_name = genes$external_gene_name
+    )
+    
+    # Ensure the chromosome names match (remove "chr" if present)
+    genes_dt[, chr := as.character(chr)]
+    
+    # Set the keys for overlap join
+    setkey(jCT_tab_CNVs, chr, start, end)
+    setkey(genes_dt, chr, gene_start, gene_end)
+    
+    # Perform the overlap join using foverlaps
+    result <- foverlaps(jCT_tab_CNVs, genes_dt, by.x = c("chr", "start", "end"), by.y = c("chr", "gene_start", "gene_end"), type = "any")
+    
+    # Remove rows with no overlap and unnecessary columns
+    result <- result[!is.na(gene_name), .(sample, chr, cn_pred, start, end, len, cov, cov_rel_dist, gene_name)]
+    
+    # If you want to collapse multiple gene names into a single row:
+    result_collapsed <- result[, .(gene_names = paste(unique(gene_name), collapse = ", ")), 
+                               by = .(sample, chr, cn_pred, start, end, len, cov, cov_rel_dist)]
+    
+    
+    jCT_tab_CNVs <- result_collapsed
+    setorder(jCT_tab_CNVs,sample,chr,start)
+    
 
     write.xlsx(jCT_tab_CNVs,paste0(result_dir,"/jabCoNtool_all_CNV_tab.xlsx"))
     plot_chromosome_lines(jCT_tab_CNVs,paste0(result_dir,"/jabCoNtool_all"))
@@ -400,16 +515,19 @@ run_all <- function(args){
 
 # develop and test
 
-# script_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
-# setwd(paste0(script_dir,"/../.."))
-# args <- readLines(con = "logs/process_and_format_CNV.log_Rargs")
-# args <- strsplit(args,split = " ")[[1]]
+script_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(paste0(script_dir,"/../.."))
+args <- readLines(con = "logs/process_and_format_CNV.log_Rargs")
+args <- strsplit(args,split = " ")[[1]]
+args <- gsub("/mnt/data/ceitec_cfg2/","/mnt/share/share/",args)
+
+args[1] <- paste0("../../../base/workspace_from_production/vojta/bouch_CNV/",args[1])
 
 #run as Rscript
 
-script_dir <- dirname(sub("--file=", "", commandArgs()[grep("--file=", commandArgs())]))
-args <- commandArgs(trailingOnly = T)
-run_all(args)
+# script_dir <- dirname(sub("--file=", "", commandArgs()[grep("--file=", commandArgs())]))
+# args <- commandArgs(trailingOnly = T)
+# run_all(args)
 
 
 

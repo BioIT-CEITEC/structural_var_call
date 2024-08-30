@@ -10,6 +10,7 @@ script_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(paste0(script_dir,"/../../.."))
 args <- readLines(con = "logs/all_samples/jabCoNtool/cnv_computation.log_Rargs")
 args <- strsplit(args,split = " ")[[1]]
+args <- gsub("/mnt/data/ceitec_cfg2/","/mnt/share/share/",args)
 
 #run as Rscript
 # script_dir <- dirname(sub("--file=", "", commandArgs()[grep("--file=", commandArgs())]))
@@ -326,8 +327,12 @@ predict_CNV_model <- function(sample_tab,trans_mat_list,cov_tab,snp_tab,library_
     print(paste0("sample: ",sel_sample))
     if(!is.null(snp_tab)){
       tictoc::tic()
-      combined_nloglike_tab <- rbind(cov_nloglike_tab[sample == sel_sample,c("region_id",cn_categories_vec),with = F],
-                                     snp_nloglike_tab[sample == sel_sample,c("region_id",cn_categories_vec),with = F])
+      sample_snp_nloglike_tab <- snp_nloglike_tab[sample == sel_sample,c("region_id",cn_categories_vec),with = F]
+      sample_snp_nloglike_tab <- sample_snp_nloglike_tab[which(!is.na(rowSums(sample_snp_nloglike_tab)))]
+      sample_cov_nloglike_tab <- cov_nloglike_tab[sample == sel_sample,c("region_id",cn_categories_vec),with = F]
+      sample_cov_nloglike_tab <- sample_cov_nloglike_tab[which(!is.na(rowSums(sample_cov_nloglike_tab)))]
+      
+      combined_nloglike_tab <- rbind(sample_cov_nloglike_tab,sample_snp_nloglike_tab)
       setkey(combined_nloglike_tab,region_id)
       combined_nloglike_tab <- melt.data.table(combined_nloglike_tab,id.vars = "region_id")
       combined_nloglike_tab <- combined_nloglike_tab[,.(value = sum(value)),by = .(region_id,variable)]
@@ -424,7 +429,8 @@ recompute_jCT_variants <- function(final_cn_pred_info_table,join_distance = 2000
   jCT_tab[,region_break := as.integer(region_dist > join_distance)]
   setorder(jCT_tab,sample,chr,start)
   rle_res <- jCT_tab[,rle(region_break),by = .(sample,chr)]
-  rle_res[,join_region_id := rep(1:(length(values)/2),each = 2),by = .(sample)]
+  rle_res[values == 1,join_region_id := seq_along(values),by = .(sample)]
+  rle_res[values == 0,join_region_id := rle_res$join_region_id[which(rle_res$values == 0)+1]]
   rle_res <- rle_res[,.(lengths = sum(lengths)),by = .(sample,chr,join_region_id)]
   jCT_tab[,join_region_id := rep(rle_res$join_region_id,rle_res$lengths)]
   
@@ -677,7 +683,8 @@ run_all <- function(args){
 
   #create sample table
   if(calling_type == "tumor_normal"){
-    normal_cov_tab_filenames <- args[(which(args == "normal_cov") + 1):(which(args == "cov") - 1)]
+    normal_cov_tab_filenames <- cov_tab_filenames[(which(cov_tab_filenames == "norm_cov") + 1):length(cov_tab_filenames)]
+    cov_tab_filenames <- cov_tab_filenames[1:(which(cov_tab_filenames == "norm_cov") - 1)]
     sample_tab <- data.table(cov_tab_filenames = c(cov_tab_filenames,normal_cov_tab_filenames),
                              type = c(rep("call",length(cov_tab_filenames)),rep("normal",length(normal_cov_tab_filenames))))
   } else {
@@ -685,6 +692,7 @@ run_all <- function(args){
                              type = c(rep("call",length(cov_tab_filenames))))
   }
   sample_tab[,sample := gsub(sample_regex,"\\1",cov_tab_filenames)]
+  sample_tab[type == "normal",sample := paste0(sample,"_normal")]
 
   if(panel_snps_filename != "no_use_snps"){
     sample_tab[,snp_tab_filenames := gsub(".region_coverage.tsv",".snpAF.tsv",cov_tab_filenames)]
