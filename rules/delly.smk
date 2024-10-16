@@ -24,18 +24,19 @@ def bam_inputs(wildcards):
 
 
 
-rule manta:
+rule delly:
     input:
         unpack(bam_inputs),
         ref = expand("{ref_dir}/seq/{ref_name}.fa",ref_dir=reference_directory,ref_name=config["reference"])[0],
         regions_gz=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
         regions_tbi=expand("{ref_dir}/intervals/{library_scope}/{library_scope}.bed.gz.tbi",ref_dir=reference_directory,library_scope=config["lib_ROI"])[0],
-    output: vcf="structural_varcalls/{sample_name}/manta/result_SV.vcf",
-    log: "logs/{sample_name}/manta/manta.log"
+    output:
+        som_sv_vcf="structural_varcalls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
+        som_sv_tbi="structural_varcalls/{sample_name}/manta/results/variants/tumorSV.vcf.gz.tbi",
+    log: "logs/{sample_name}/callers/manta.log"
     threads: 5
     resources: mem=6
     params: dir = "structural_varcalls/{sample_name}/manta",
-            manta_sv_vcf="structural_varcalls/{sample_name}/manta/results/variants/tumorSV.vcf.gz",
             library_scope = config["lib_ROI"],
             calling_type = config["calling_type"]
     conda:  "../wrappers/manta/env.yaml"

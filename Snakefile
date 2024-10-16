@@ -1,73 +1,74 @@
 import os
 import pandas as pd
+import json
+from snakemake.utils import min_version
 
-# GLOBAL_REF_PATH = "/mnt/references/"
-GLOBAL_REF_PATH = "/home/rj/4TB/CEITEC/"
+configfile: "config.json"
 
-##### Config processing #####
-#conversion from new SEQUIA json
-sample_tab = pd.DataFrame.from_dict(config["samples"],orient="index")
-# for CNV pipeline to get corresponding germinal sample column
-for index, row in sample_tab.iterrows():
-    donorvalue = sample_tab.loc[index,"donor"]
-    sample_tab.loc[index,"germinal"] = sample_tab.loc[(sample_tab["donor"] == donorvalue) & (sample_tab["tumor_normal"]=="normal"),"sample_name"].to_string(index=False)    
+min_version("5.18.0")
+GLOBAL_REF_PATH = config["globalResources"]
+GLOBAL_TMPD_PATH = config["globalTmpdPath"]
 
+##### BioRoot utilities #####
+module BR:
+    snakefile: github("BioIT-CEITEC/bioroots_utilities", path="bioroots_utilities.smk",branch="master")
+    config: config
 
-##### Reference processing
-#
-config["material"] = "DNA"
-if config["lib_ROI"] != "wgs" or config["lib_ROI"] != "RNA":
-    # setting reference from lib_ROI
-    f = open(os.path.join(GLOBAL_REF_PATH,"reference_info","lib_ROI.json"))
-    lib_ROI_dict = json.load(f)
-    f.close()
-    config["reference"] = [ref_name for ref_name in lib_ROI_dict.keys() if isinstance(lib_ROI_dict[ref_name],dict) and config["lib_ROI"] in lib_ROI_dict[ref_name].keys()][0]
-else:
-    if config["lib_ROI"] != "RNA":
-        config["material"] = "RNA" # ??? nemelo by DNA
-        config["lib_ROI"] = "wgs"
+use rule * from BR as other_*
 
-#### Setting organism from reference
-f = open(os.path.join(GLOBAL_REF_PATH,"reference_info","reference2.json"),)
-reference_dict = json.load(f)
-f.close()
-config["species_name"] = [organism_name for organism_name in reference_dict.keys() if isinstance(reference_dict[organism_name],dict) and config["reference"] in reference_dict[organism_name].keys()][0]
-config["organism"] = config["species_name"].split(" (")[0].lower().replace(" ","_")
-if len(config["species_name"].split(" (")) > 1:
-    config["species"] = config["species_name"].split(" (")[1].replace(")","")
+sample_tab = BR.load_sample()
 
-
+config = BR.load_organism()
 
 #### FOLDERS
-reference_directory = os.path.join(GLOBAL_REF_PATH,config["organism"],config["reference"])
+reference_directory = config["reference_dir"]
 
-####################################
-# DEFAULT VALUES
-if not "format" in config:
-    config["format"] = "default"
-if not "min_variant_frequency" in config:
-    config["min_variant_frequency"] = 0
-if not "not_use_merged" in config:
-    config["not_use_merged"] = False
+# ####################################
+# # VARIALBES FROM CONFIG
+used_SV_callers = []
+used_CNV_callers = []
+if config["use_gatk_cnv"]:
+    used_CNV_callers.append("gatk_cnv")
+if config["use_cnvkit"]:
+    used_CNV_callers.append("cnvkit")
+if config["use_jabCoNtool"]:
+    used_CNV_callers.append("jabCoNtool")
+if config["use_control_freec"]:
+    used_CNV_callers.append("control_freec")
+if config["use_manta"]:
+    used_SV_callers.append("manta")
+if config["use_gridss"]:
+    used_SV_callers.append("gridss")
 
+
+wildcard_constraints:
+     tumor_normal = "tumor|normal|sample",
 
 
 ####################################
 # SEPARATE RULES
 include: "rules/cnvkit.smk"
 include: "rules/gatk_cnv.smk"
+include: "rules/jabCoNtool.smk"
+include: "rules/control_freec.smk"
 include: "rules/manta.smk"
-include: "rules/pindel.smk"
+include: "rules/delly.smk"
+# include: "rules/gridss.smk"
 include: "rules/svdb.smk"
+include: "rules/variant_postprocessing.smk"
+include: "rules/common_prep.smk"
 # include: "rules/vep.smk"
+
+
 
 ####################################
 # RULE ALL
+def all_inputs(wildcards):
+    input_dict = {}
+    input_dict["final_report"] = "reports/final_SV_report.html",
+    if config["create_cohort_data"] == True:
+        input_dict["cohort_data_update_tag"] = "cohort_data/cohort_data_updated"
+    return input_dict
+
 rule all:
-    input:  
-        vcf_cnvkit=lambda wildcards: expand("cnv_sv/cnvkit_vcf/{sample_name}.vcf", sample_name = sample_tab.sample_name),
-        segment_regions=lambda wildcards: expand("cnv_sv/cnvkit_batch/{donor}/{sample_name}.cnr",sample_name = sample_tab.sample_name,donor=sample_tab.donor),
-        vcf_gatk=lambda wildcards: expand("cnv_sv/gatk_cnv_vcf/{sample_name}.vcf", sample_name = sample_tab.sample_name),
-        manta_som_sv_vcf=lambda wildcards: expand("cnv_sv/manta/{donor}/results/variants/somaticSV.vcf.gz",donor = sample_tab.donor),
-        pindel_vcf=lambda wildcards: expand("cnv_sv/pindel/{donor}.vcf",donor = sample_tab.donor),
-        svdb=lambda wildcards: expand("cnv_sv/svdb_query/{sample_name}.svdb_query.vcf",sample_name = sample_tab.sample_name),
+    input: unpack(all_inputs)
