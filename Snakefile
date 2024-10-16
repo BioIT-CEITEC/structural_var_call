@@ -1,31 +1,27 @@
 import os
 import pandas as pd
+import json
+from snakemake.utils import min_version
 
 configfile: "config.json"
+
+min_version("5.18.0")
 GLOBAL_REF_PATH = config["globalResources"]
+GLOBAL_TMPD_PATH = config["globalTmpdPath"]
 
+##### BioRoot utilities #####
+module BR:
+    snakefile: github("BioIT-CEITEC/bioroots_utilities", path="bioroots_utilities.smk",branch="master")
+    config: config
 
-##### Config processing #####
-sample_tab = pd.DataFrame.from_dict(config["samples"],orient="index")
+use rule * from BR as other_*
 
-#### Reference info processing
+sample_tab = BR.load_sample()
 
-#### Setting reference from lib_ROI
-if config["lib_ROI"] != "wgs":
-    # setting reference from lib_ROI
-    f = open(os.path.join(GLOBAL_REF_PATH,"reference_info","lib_ROI.json"))
-    lib_ROI_dict = json.load(f)
-    f.close()
-    config["reference"] = [ref_name for ref_name in lib_ROI_dict.keys() if isinstance(lib_ROI_dict[ref_name],dict) and config["lib_ROI"] in lib_ROI_dict[ref_name].keys()][0]
-
-#### Setting organism from reference
-f = open(os.path.join(GLOBAL_REF_PATH,"reference_info","reference.json"))
-reference_dict = json.load(f)
-f.close()
-config["organism"] = [organism_name.lower().replace(" ","_") for organism_name in reference_dict.keys() if isinstance(reference_dict[organism_name],dict) and config["reference"] in reference_dict[organism_name].keys()][0]
+config = BR.load_organism()
 
 #### FOLDERS
-reference_directory = os.path.join(GLOBAL_REF_PATH,config["organism"],config["reference"])
+reference_directory = config["reference_dir"]
 
 # ####################################
 # # VARIALBES FROM CONFIG
