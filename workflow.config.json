@@ -33,7 +33,8 @@
     "sample_name"
   ],
   "requested_params": [
-    "reference",
+    "organism",
+    "assembly",
     "lib_ROI"
   ],
   "gui_params" : {
