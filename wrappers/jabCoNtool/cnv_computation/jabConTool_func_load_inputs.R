@@ -88,7 +88,9 @@ get_cov_tab <- function(sample_tab,panel_intervals,cohort_tab,join_intervals_dis
     
     #combine tables
     cohort_cov_tab <- cohort_cov_tab[,names(cov_tab),with = F]
+    common_regions <- intersect(cohort_cov_tab$region_id,cov_tab$region_id)
     cov_tab <- rbind(cov_tab,cohort_cov_tab)
+    cov_tab <- cov_tab[region_id %in% common_regions]
   } else {
     #read coverage normalization
     overall_mean <- mean(cov_tab$cov_raw)
