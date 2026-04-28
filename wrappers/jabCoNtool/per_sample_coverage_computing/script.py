@@ -10,10 +10,10 @@ f.write("\n##\n## RULE: per_sample_coverage_counting \n##\n")
 f.close()
 
 command = "bedtools coverage -sorted " + \
-          " -a " + snakemake.input.region_bed + \
-          " -b " + snakemake.input.bam + \
-          " -g " + snakemake.input.ref_dict + \
-          " > " + snakemake.output.cov_tab
+          " -a " + str(snakemake.input.region_bed) + \
+          " -b " + str(snakemake.input.bam) + \
+          " -g " + str(snakemake.input.ref_dict) + \
+          " > " + str(snakemake.output.cov_tab)
 
 f = open(log_filename, 'at')
 f.write("## COMMAND: "+command+"\n")
