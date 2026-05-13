@@ -515,6 +515,7 @@ run_all <- function(args){
   if(cohort_data_filename != "no_previous_cohort_data"){
     cohort_tab <- fread(cohort_data_filename)
     cohort_tab[,chr := as.character(chr)]
+    cohort_tab[,cn_pred := as.character(cn_pred)]
     cohort_tab <- cohort_tab[!(sample %in% sample_tab$sample)]
   } else {
     cohort_tab <- NULL

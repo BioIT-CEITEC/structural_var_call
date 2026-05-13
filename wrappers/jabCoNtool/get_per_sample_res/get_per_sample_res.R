@@ -15,6 +15,7 @@ run_all <- function(args){
   
   panel_intervals <- fread(panel_intervals_filename)
   setnames(panel_intervals,c("V1","V2","V3","V4"),c("chr","start","end","region_name"))
+  panel_intervals[,chr := as.character(chr)]
   panel_intervals[,V5 := NULL]
   panel_intervals[,V6 := NULL]
   panel_intervals[,region_name_suffix := paste0("_",as.character(seq_along(start))),by = region_name]
@@ -25,11 +26,13 @@ run_all <- function(args){
   setkeyv(panel_intervals, c("chr","start","end"))
   
   snp_tab <- fread_vector_of_files(snp_tab_filenames,".*\\/(.*)_snpAF.tsv")
-  setnames(snp_tab,c("chrom","pos","A","C","G","T","cov","sample"))
+  setnames(snp_tab,c("chr","pos","A","C","G","T","cov","sample"))
+  snp_tab[,chr := as.character(chr)]
   snp_tab <- snp_tab[cov > 0]
   panel_snps <- fread(panel_snps_filename)
-  setnames(panel_snps,c("chrom","pos","ref","alt","AF"))
-  snp_tab <- merge(snp_tab,panel_snps,by = c("chrom","pos"))
+  setnames(panel_snps,c("chr","pos","ref","alt","AF"))
+  panel_snps[,chr := as.character(chr)]
+  snp_tab <- merge(snp_tab,panel_snps,by = c("chr","pos"))
   snp_tab[,alt_count := as.numeric(apply(snp_tab,1,function(x) x[x["alt"]]))]
   snp_tab[,VAF := alt_count / cov]
   
@@ -58,7 +61,7 @@ run_all <- function(args){
   snp_tab[,QUAD_prob := 2*(prior_prob[,2] + prior_prob[,6])]
 
   snp_tab[,pos2 := pos]
-  snp_tab <- foverlaps(snp_tab, panel_intervals, by.x=c("chrom","pos","pos2"), by.y=c("chr","start","end"), nomatch = 0)
+  snp_tab <- foverlaps(snp_tab, panel_intervals, by.x=c("chr","pos","pos2"), by.y=c("chr","start","end"), nomatch = 0)
   snp_tab[,pos2 := NULL]
   
   print("snp_end")
@@ -76,6 +79,7 @@ run_all <- function(args){
   
   cov_tab <- fread_vector_of_files(cov_tab_filenames,".*\\/(.*)_cov.tsv")
   setnames(cov_tab,c("V1","V2","V3"),c("chr","pos","cov"))
+  cov_tab[,chr := as.character(chr)]
   cov_tab[,pos2 := pos]
   cov_tab <- foverlaps(cov_tab, panel_intervals, by.x=c("chr","pos","pos2"), by.y=c("chr","start","end"), nomatch = 0)
   # cov_tab[,middle_pos := pos[round(.N/2)],by = .(chr,start,end,sample,region_name)]

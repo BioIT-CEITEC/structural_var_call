@@ -18,7 +18,8 @@ load_panel_intervals <- function(panel_intervals_filename,library_type){
     panel_intervals[,V4 := paste("reg",V1,V2,V3,sep = "_")]
   }
   setnames(panel_intervals,c("chr","start","end","region_name"))
-  
+  panel_intervals[, chr := as.character(chr)]
+
   if(library_type == "wgs"){
     #remove regions smaller then 1/2 of size
     panel_intervals <- panel_intervals[end - start > (max(end - start) / 2) ,]
@@ -40,11 +41,12 @@ get_cov_tab <- function(sample_tab,panel_intervals,cohort_tab,join_intervals_dis
   cov_tab <- fread_vector_of_files(sample_tab$cov_tab_filenames,sample_tab$sample)
   cov_tab[,tail(names(cov_tab),3) := NULL]
   setnames(cov_tab,c("V1","V2","V3"),c("chr","start","end"))
+  cov_tab[,chr := as.character(chr)]
   setnames(cov_tab,tail(names(cov_tab),1),c("cov_raw"))
+  cov_tab[, chr := as.character(chr)]
 
-  # chr X a Y pořešíme později, zatím analýza bez něj, aby nezkresloval výsledky
-  #homsap hack TODO
-  cov_tab <- cov_tab[chr %in% 1:22]
+  # Include autosomes and sex chromosomes
+  cov_tab <- cov_tab[chr %in% c(as.character(1:22), "X", "Y")]
 
   #add panel_intervals grouping based on join
   if(join_intervals_distance > 0){
@@ -105,10 +107,12 @@ get_cov_tab <- function(sample_tab,panel_intervals,cohort_tab,join_intervals_dis
 get_snp_tab <- function(sample_tab,panel_snps_filename,panel_intervals,individual_cov_threshold = 10,max_pos_cov_threshold = 20){
   snp_tab <- fread_vector_of_files(sample_tab$snp_tab_filenames,sample_tab$sample)
   setnames(snp_tab,c("sample","chr","pos","A","C","G","T","cov"))
+  snp_tab[,chr := as.character(chr)]
   snp_tab <- snp_tab[cov > 0]
   panel_snps <- fread(panel_snps_filename)
 
   setnames(panel_snps,c("chr","pos","ref","alt","BAF"))
+  panel_snps[,chr := as.character(chr)]
   #genetics law
   panel_snps[,pop_HET_probability := 2*BAF*(1-BAF)]
 
@@ -123,10 +127,6 @@ get_snp_tab <- function(sample_tab,panel_snps_filename,panel_intervals,individua
   snp_tab[,alt_count := t(as.matrix(snp_tab[,.(A,C,G,`T`)]))[row_vec]]
   snp_tab <-snp_tab[,.(sample,region_id,chr,pos,pop_HET_probability,alt_count,ref_count = cov - alt_count,cov)]
 
-  # chr X a Y pořešíme později, zatím analýza bez něj, aby nezkresloval výsledky
-  #homsap hack TODO
-  snp_tab <- snp_tab[chr %in% 1:22]
-
   snp_tab[,max_pos_cov := max(cov),by = .(chr,pos) ]
 
   snp_tab <- snp_tab[max_pos_cov > max_pos_cov_threshold]
@@ -136,8 +136,8 @@ get_snp_tab <- function(sample_tab,panel_snps_filename,panel_intervals,individua
   snp_tab[,cov := NULL]
   snp_tab[,max_pos_cov := NULL]
 
-  #
-  # snp_tab <- snp_tab[chr != "X"] # chr X pořešíme později, zatím analýza bez něj, aby nezkresloval výsledky
+  # Include autosomes and sex chromosomes
+  snp_tab <- snp_tab[chr %in% c(as.character(1:22), "X", "Y")]
 
   setkey(snp_tab,chr,pos,sample)
   return(snp_tab)
@@ -165,6 +165,7 @@ load_and_prefilter_sample_data <- function(sample_tab,
       centromere_tab <- fread(cytoband_file)
 
       setnames(centromere_tab,c("chr","start","end",as.character(seq_len(ncol(centromere_tab) - 4)),"band_type"))
+      centromere_tab[,chr := as.character(chr)]
       centromere_tab <- centromere_tab[band_type == "acen",.(start = min(start),end = max(end)),by = chr]
       centromere_tab[,acen_length := end - start]
       #set removed netromere area as centromere +/- 10% - #TODO set as parameter 
@@ -200,6 +201,7 @@ load_and_prefilter_sample_data <- function(sample_tab,
   if(nchar(GC_normalization_file) > 0 & GC_normalization_file != "no_GC_norm"){
     GC_bin_content_tab <- fread(GC_normalization_file)
     setnames(GC_bin_content_tab, c("chr","start","gc","usable_bases_ratio"))
+    GC_bin_content_tab[,chr := as.character(chr)]
     GC_bin_content_tab <- GC_bin_content_tab[usable_bases_ratio > usable_bases_ratio_threshold]
     GC_bin_content_tab[,usable_bases_ratio := NULL]
     
