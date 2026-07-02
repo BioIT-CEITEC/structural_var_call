@@ -202,10 +202,7 @@ plot_chromosome_lines <- function(jCT_tab_CNVs,out_filename_prefix,reference = "
 recompute_jCT_variants <- function(jCT_tab,join_distance = 200000){
   jCT_tab[,region_break := as.integer(region_dist > join_distance)]
   setorder(jCT_tab,sample,chr,start)
-  rle_res <- jCT_tab[,rle(region_break),by = .(sample,chr)]
-  rle_res[,join_region_id := rep(1:(length(values)/2),each = 2),by = .(sample,chr)]
-  rle_res <- rle_res[,.(lengths = sum(lengths)),by = .(sample,chr,join_region_id)]
-  jCT_tab[,join_region_id := rep(rle_res$join_region_id,rle_res$lengths)]
+  jCT_tab[,join_region_id := cumsum(data.table::shift(region_break,1,fill = 0)) + 1,by = .(sample,chr)]
   
   
   rle_res <- jCT_tab[,rle(cn_pred),by = .(sample,chr)]
